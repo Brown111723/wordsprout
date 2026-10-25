@@ -178,9 +178,9 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .quick .tile{--tile:82px;flex:0 0 96px;min-height:94px;padding:6px 4px 8px}
 
 /* Sheets */
-.sheet-wrap{position:fixed;inset:0;z-index:50;background:var(--scrim);display:grid;place-items:center;
+.sheet-wrap{position:fixed;inset:0;z-index:50;background:var(--scrim);display:flex;align-items:flex-start;justify-content:center;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
   padding:calc(env(safe-area-inset-top,0px) + 16px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
-.sheet{width:min(640px,100%);max-height:100%;overflow:auto;background:var(--surface);color:var(--ink);border-radius:24px;padding:22px;
+.sheet{width:min(640px,100%);margin-block:auto;background:var(--surface);color:var(--ink);border-radius:24px;padding:22px;
   font-size:17px;line-height:1.4;-webkit-user-select:text;user-select:text}
 .sh-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
 .sh-head h2{margin:0;flex:1;font:700 26px/1.15 var(--f-word);text-wrap:balance}
@@ -214,6 +214,10 @@ legend{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:upperc
 .warn{font-weight:700;color:var(--danger)}
 .ed{display:flex;gap:18px;flex-wrap:wrap}
 .ed-prev{--tile:150px;flex:0 0 auto}
+.picmode{display:flex;gap:8px;flex-wrap:wrap}
+.picmode button{flex:1 1 0;min-width:90px;padding:10px 8px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:700;font-size:16px}
+.picmode button[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,var(--surface))}
+.facegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .ed-prev .tile{width:160px;pointer-events:none}
 .ed-fields{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:14px}
 .sh-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
@@ -223,15 +227,48 @@ legend{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:upperc
 .toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 116px);transform:translateX(-50%);z-index:60;
   max-width:min(520px,calc(100% - 32px));padding:14px 20px;border-radius:16px;background:var(--ink);color:var(--bg);font-size:17px;text-align:center}
 
+/* Small or short screens (phones, either way round): the whole page scrolls */
+@media (max-width:720px), (max-height:620px){
+  body{height:auto;min-height:100%;overflow:auto}
+  .app{height:auto;min-height:100%;grid-template-rows:auto}
+  .board{overflow:visible!important}
+  .cols{height:auto}
+  .col .grid{overflow:visible}
+  .quick{position:sticky;bottom:0;z-index:5;background:var(--bg);padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+}
+/* Phone width */
 @media (max-width:720px){
-  .slot{height:64px;padding:4px 8px}
-  .slot .emo{font-size:30px} .slot img{width:44px;height:44px} .slot .w{font-size:18px}
-  .actions{flex:1 1 100%}
-  .speak{flex:1;flex-direction:row;gap:10px;min-height:58px}
-  .ctl{width:64px}
+  .top{gap:8px;padding-block:8px}
   .modesw{flex:1 1 100%;flex-direction:row}
-  .modesw button{justify-content:center;min-height:48px}
-  .ask{font-size:24px}
+  .modesw button{justify-content:center;min-height:46px;font-size:17px;padding:4px 10px}
+  .strip{flex:1 1 100%;padding:6px;gap:6px}
+  .slot{height:62px;flex-direction:column;justify-content:center;gap:1px;padding:3px 4px}
+  .slot.filled{justify-content:center}
+  .slot .emo{font-size:26px} .slot img{width:34px;height:34px;border-radius:8px}
+  .slot .w{font-size:15px;max-width:100%}
+  .slot .ph{font-size:13px}
+  .slot.ans{flex:1 0 62px}
+  .slot.ans .emo{font-size:24px} .slot.ans .w{font-size:13px}
+  .actions{flex:1 1 100%}
+  .speak{flex:1;flex-direction:row;gap:10px;min-height:52px;white-space:nowrap}
+  .speak .ic{font-size:26px}
+  .ctl{width:58px;font-size:24px}
+  .banner{font-size:14px;padding:8px 8px 8px 12px;gap:8px}
+  .banner span{flex-basis:180px}
+  .banner button{padding:8px 12px;font-size:15px}
+  .head{min-height:0;padding-block:0 6px;gap:8px}
+  .ask{font-size:22px}
+  .tab{font-size:16px;padding:6px 12px 6px 8px} .tab .emo{font-size:20px}
+  .grid{gap:10px;padding:6px}
+  .quick{gap:8px;padding-top:8px}
+  .quick .tile{--tile:68px;flex-basis:80px;min-height:82px}
+  .done{gap:18px}
+  .done .row{--tile:clamp(92px,27vw,150px);gap:12px}
+  .said{font-size:28px}
+  .bb{padding:14px 20px;font-size:19px}
+  .sheet{padding:16px;border-radius:18px}
+  .sh-head h2{font-size:22px}
+  .ed-prev{--tile:104px} .ed-prev .tile{width:116px}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
@@ -271,15 +308,69 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const uid = () => Math.random().toString(36).slice(2, 10);
 const T = (label, emoji, say, extra) => Object.assign({ id: uid(), label, emoji, say: say || "" }, extra || {});
 
+/* ---------- Cartoon faces ---------- */
+const HAIRSTYLES = [["short","Short"],["spiky","Spiky"],["curly","Curly"],["long","Long"],["longcurly","Long curly"],["bob","Bob"],["pigtails","Pigtails"],["toddler","Toddler fluff"],["balding","Balding"],["bald","Bald"]];
+const HAIR = { brown:["Brown","#6B4226"], darkbrown:["Dark brown","#3B2416"], black:["Black","#1E1B1A"], blond:["Blond","#E3BC5A"], blondgrey:["Blond-grey","#D3C6A2"], grey:["Grey","#B4B4B4"], greybrown:["Grey-brown","#857565"], red:["Red","#B5532C"], white:["White","#EDEDED"] };
+const EYES = { brown:["Brown","#6B3E1F"], green:["Green","#3E8A4F"], blue:["Blue","#3C6FB5"], hazel:["Hazel","#8A6A2E"], grey:["Grey","#7A8794"] };
+const SKIN = { s1:["Very light","#F8DCC8"], s2:["Light","#F1C7A3"], s3:["Medium","#D9A47A"], s4:["Brown","#A86B44"], s5:["Dark","#6E4127"] };
+const TOPS = { "#E86FA0":"Pink", "#4BA3E3":"Blue", "#8E6CC9":"Purple", "#3F7F5F":"Green", "#E2833A":"Orange", "#2FA58E":"Teal", "#D64545":"Red", "#C7A12F":"Mustard", "#4E6CD1":"Navy", "#555F6D":"Grey" };
+const faceCache = new Map();
+function faceSVG(f, child) {
+  const hair = (HAIR[f.hair] || HAIR.brown)[1], eye = (EYES[f.eyes] || EYES.brown)[1], skin = (SKIN[f.skin] || SKIN.s2)[1];
+  const top = f.shirt || "#4BA3E3", sty = f.style || "short";
+  const ey = child ? 53 : 50;
+  const cap = `<path d="M27,54 C24,12 76,12 73,54 C70,32 62,${child ? 33 : 31} 50,${child ? 37 : 35} C38,${child ? 33 : 31} 30,32 27,54Z" fill="${hair}"/>`;
+  let back = "", front = "";
+  const curls = (cx, cy, r, from, to, step, rad) => { let o = ""; for (let a = from; a <= to; a += step) { const t = a * Math.PI / 180; o += `<circle cx="${(cx + r * Math.cos(t)).toFixed(1)}" cy="${(cy + r * Math.sin(t)).toFixed(1)}" r="${rad}" fill="${hair}"/>`; } return o; };
+  if (sty === "short") front = cap;
+  if (sty === "spiky") front = cap + `<polygon points="28,40 30,20 37,30 40,13 46,27 51,9 55,26 61,12 64,28 71,19 72,40" fill="${hair}"/>`;
+  if (sty === "curly") front = cap + curls(50, 48, 25, -190, 10, 20, 7.5);
+  if (sty === "longcurly") { back = curls(26, 52, 0, 0, 0, 1, 0) + [56, 66, 76, 86].map(y => `<circle cx="25" cy="${y}" r="8.5" fill="${hair}"/><circle cx="75" cy="${y}" r="8.5" fill="${hair}"/>`).join(""); front = cap + curls(50, 48, 25, -190, 10, 20, 7.5); }
+  if (sty === "long") { back = `<path d="M25,46 C21,70 23,88 29,95 L71,95 C77,88 79,70 75,46Z" fill="${hair}"/>`; front = `<path d="M27,56 C22,12 78,12 73,56 C71,36 58,30 44,33 C36,35 30,42 27,56Z" fill="${hair}"/>`; }
+  if (sty === "bob") { back = `<path d="M25,46 C22,66 25,77 31,79 L69,79 C75,77 78,66 75,46Z" fill="${hair}"/>`; front = cap; }
+  if (sty === "pigtails") { back = `<circle cx="20" cy="52" r="10" fill="${hair}"/><circle cx="80" cy="52" r="10" fill="${hair}"/><circle cx="17" cy="62" r="7" fill="${hair}"/><circle cx="83" cy="62" r="7" fill="${hair}"/>`;
+    front = cap + `<circle cx="27.5" cy="47" r="3.6" fill="#E8508F"/><circle cx="72.5" cy="47" r="3.6" fill="#E8508F"/>`; }
+  if (sty === "toddler") front = `<path d="M27,54 C25,16 75,16 73,54 C70,38 60,36 50,39 C40,36 30,38 27,54Z" fill="${hair}"/><path d="M44,23 C46,14 52,13 50,22 C55,15 60,17 56,24Z" fill="${hair}"/>`;
+  if (sty === "balding" || sty === "bald") front = `<ellipse cx="29" cy="47" rx="4.5" ry="${sty === "bald" ? 6 : 10}" fill="${hair}"/><ellipse cx="71" cy="47" rx="4.5" ry="${sty === "bald" ? 6 : 10}" fill="${hair}"/>` + (sty === "balding" ? `<path d="M40,29 C45,26 55,26 60,29" stroke="${hair}" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".7"/>` : "");
+  const ewx = child ? 5.6 : 4.6, ewy = child ? 6 : 4.8, ir = child ? 3.7 : 3;
+  const eyes = [41, 59].map(x => `<ellipse cx="${x}" cy="${ey}" rx="${ewx}" ry="${ewy}" fill="#fff"/><circle cx="${x}" cy="${ey + .3}" r="${ir}" fill="${eye}"/><circle cx="${x}" cy="${ey + .3}" r="1.7" fill="#1A1210"/><circle cx="${x + 1.1}" cy="${ey - 1}" r=".9" fill="#fff"/>`).join("");
+  const browC = (sty === "bald" || sty === "balding") ? "#5A4636" : hair;
+  const brows = child ? "" : `<path d="M36,${ey - 7} Q41,${ey - 9} 46,${ey - 7}" stroke="${browC}" stroke-width="1.9" fill="none" stroke-linecap="round"/><path d="M54,${ey - 7} Q59,${ey - 9} 64,${ey - 7}" stroke="${browC}" stroke-width="1.9" fill="none" stroke-linecap="round"/>`;
+  const mouth = child ? `<path d="M43,63 Q50,71 57,63 Q50,66 43,63Z" fill="#A8443A"/>` : `<path d="M44,62 Q50,67 56,62" stroke="#8A3B30" stroke-width="2.1" fill="none" stroke-linecap="round"/>`;
+  const cheeks = child ? `<circle cx="34" cy="61" r="4.5" fill="#F28B8B" opacity=".38"/><circle cx="66" cy="61" r="4.5" fill="#F28B8B" opacity=".38"/>` : "";
+  const glasses = f.glasses ? `<circle cx="41" cy="${ey}" r="7.6" stroke="#2B2B2B" stroke-width="2" fill="none"/><circle cx="59" cy="${ey}" r="7.6" stroke="#2B2B2B" stroke-width="2" fill="none"/><path d="M48.6,${ey - .5} Q50,${ey - 2} 51.4,${ey - .5}" stroke="#2B2B2B" stroke-width="2" fill="none"/>` : "";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">${back}<path d="M14,100 C16,84 30,79 50,79 C70,79 84,84 86,100Z" fill="${top}"/><rect x="44" y="68" width="12" height="14" fill="${skin}"/><circle cx="28" cy="53" r="5" fill="${skin}"/><circle cx="72" cy="53" r="5" fill="${skin}"/><ellipse cx="50" cy="50" rx="22" ry="24" fill="${skin}"/>${front}${eyes}${brows}${cheeks}${mouth}${glasses}</svg>`;
+}
+function faceURL(f, child) {
+  const k = JSON.stringify(f) + (child ? "c" : "a");
+  if (!faceCache.has(k)) faceCache.set(k, "data:image/svg+xml;charset=utf-8," + encodeURIComponent(faceSVG(f, child)));
+  return faceCache.get(k);
+}
+
 /* ---------- Starting vocabulary ---------- */
+const F = (style, hair, eyes, extra) => Object.assign({ style, hair, eyes, skin: "s2", glasses: false, shirt: "#4BA3E3" }, extra || {});
+function defaultPeople() {
+  return [
+    T("I", "👧", "", { age: "child", face: F("pigtails", "brown", "brown", { shirt: "#E86FA0" }) }),
+    T("you", "👉"),
+    T("Kaido", "👦", "", { age: "child", face: F("toddler", "blond", "green", { shirt: "#4BA3E3" }) }),
+    T("Amy", "👩‍🦳", "", { age: "adult", face: F("long", "blondgrey", "brown", { glasses: true, shirt: "#8E6CC9" }) }),
+    T("Lee", "👨‍🦲", "", { age: "adult", face: F("balding", "greybrown", "brown", { shirt: "#3F7F5F" }) }),
+    T("Charlie", "👱", "", { age: "adult", face: F("short", "blond", "brown", { shirt: "#E2833A" }) }),
+    T("Azul", "🧒", "", { age: "child", face: F("curly", "brown", "brown", { shirt: "#2FA58E" }) }),
+    T("Jayden", "🧑", "", { age: "adult", face: F("spiky", "brown", "brown", { shirt: "#D64545" }) }),
+    T("Josci", "👩‍🦱", "", { age: "adult", face: F("longcurly", "black", "brown", { shirt: "#C7A12F" }) }),
+    T("Dad", "👨", "", { age: "adult" }), T("Mum", "👩", "", { age: "adult" }),
+    T("Grandma", "👵", "", { age: "adult" }), T("Grandpa", "👴", "", { age: "adult" }),
+    T("Harry", "🧑", "", { age: "adult", face: F("short", "brown", "brown", { shirt: "#4E6CD1" }) })
+  ];
+}
+const KIDS_ONLY = ["toilet", "bath", "shower", "brush teeth", "wash hands", "change clothes", "teddy"];
 function defaults() {
   return {
-    v: 1,
+    v: 2,
     settings: { mode: "strict", speakWord: true, speakSentence: true, grammar: true, voice: "", rate: 0.9, pitch: 1.1, size: "m", showQuick: true },
-    who: [
-      T("I", "👧"), T("you", "👉"), T("Mum", "👩"), T("Dad", "👨"), T("Brother", "👦"),
-      T("Grandma", "👵"), T("Grandad", "👴"), T("Teacher", "🧑‍🏫"), T("Friend", "🧒"), T("we", "👨‍👩‍👧")
-    ],
+    who: defaultPeople(),
     doing: [
       T("want", "🤲", "", { go: "food" }), T("need", "🙏", "", { go: "care" }), T("don't want", "🙅‍♀️", "", { go: "food" }),
       T("like", "😍", "", { go: "food" }), T("don't like", "😖", "", { go: "food" }), T("feel", "💭", "", { go: "feelings" }),
@@ -294,7 +385,7 @@ function defaults() {
         T("rice","🍚"), T("chicken","🍗"), T("eggs","🥚"), T("pizza","🍕"), T("chips","🍟"), T("biscuit","🍪", "a biscuit"),
         T("ice cream","🍦"), T("icy pole","🍧", "an icy pole"), T("snack","🍿", "a snack") ] },
       { id: "drinks", label: "Drinks", emoji: "🥛", kind: "thing", items: [
-        T("water","💧"), T("milk","🥛"), T("juice","🧃"), T("hot chocolate","☕") ] },
+        T("water","💧"), T("milk","🥛"), T("juice","🧃"), T("hot chocolate","🍫"), T("coffee","☕", "", { aud: "grownups" }), T("tea","🍵", "", { aud: "grownups" }) ] },
       { id: "play", label: "Play", emoji: "🧸", kind: "thing", items: [
         T("iPad","📱"), T("TV","📺"), T("music","🎵"), T("book","📖", "a book"), T("ball","⚽"), T("blocks","🧱"),
         T("puzzle","🧩", "a puzzle"), T("teddy","🧸"), T("bubbles","🫧"), T("drawing","🖍️"), T("painting","🎨"),
@@ -303,7 +394,7 @@ function defaults() {
         T("home","🏠"), T("outside","🌳"), T("park","🛝", "to the park"), T("school","🏫", "to school"),
         T("shops","🛒", "to the shops"), T("beach","🏖️", "to the beach"), T("pool","🏊", "to the pool"),
         T("Grandma's","🏡", "to Grandma's house"), T("car","🚗", "in the car"), T("bed","🛏️", "to bed"),
-        T("doctor","🩺", "to the doctor"), T("library","📚", "to the library") ] },
+        T("doctor","🩺", "to the doctor"), T("library","📚", "to the library"), T("work","💼", "to work", { aud: "grownups" }) ] },
       { id: "care", label: "Me & body", emoji: "🛁", kind: "thing", items: [
         T("toilet","🚽", "the toilet"), T("bath","🛁", "a bath"), T("shower","🚿", "a shower"), T("sleep","😴"),
         T("hug","🤗", "a hug"), T("break","⏸️", "a break"), T("quiet","🤫", "quiet time"), T("tissue","🤧", "a tissue"),
@@ -346,6 +437,9 @@ function defaults() {
   };
 }
 
+function tagKids(b) { b.groups.forEach(g => g.items.forEach(i => { if (!i.aud && KIDS_ONLY.includes(i.label.toLowerCase())) i.aud = "kids"; })); }
+const _defaults = defaults;
+defaults = function () { const b = _defaults(); tagKids(b); return b; };
 let board = defaults();
 const st = { mode: "talk", atab: "a-feel", last: null, step: 0, slots: [null, null, null], skip: [false, false, false], done: false, group: "food", edit: false };
 const STEPS = [{ name: "Who", kind: "who" }, { name: "Doing", kind: "do" }, { name: "What", kind: "thing" }];
@@ -361,7 +455,7 @@ function curGroup() {
 }
 function groupItems(g) {
   if (!g) return [];
-  if (g.mirror) return board.who.filter(p => !["i", "we"].includes(p.label.trim().toLowerCase()));
+  if (g.mirror) return board.who.filter(p => !["i", "we", "you"].includes(p.label.trim().toLowerCase()));
   return g.items;
 }
 const tabById = id => board.answers.tabs.find(t => t.id === id);
@@ -474,13 +568,23 @@ const store = {
     }
   }
 };
-let saveTimer;
+let saveTimer, migrated = false;
 function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set("board", JSON.parse(JSON.stringify(board))), 250); }
 function valid(b) { return b && Array.isArray(b.who) && Array.isArray(b.doing) && Array.isArray(b.groups) && Array.isArray(b.quick); }
 function migrate(b) {
   b.settings = Object.assign({}, defaults().settings, b.settings || {});
   b.photos = b.photos || {};
   b.groups.forEach(g => { g.items = g.items || []; g.kind = g.kind || "thing"; });
+  if ((b.v || 1) < 2) {
+    b.who = defaultPeople();
+    const d = defaults();
+    d.groups.forEach(dg => {
+      const g = b.groups.find(x => x.id === dg.id); if (!g || dg.mirror) return;
+      dg.items.forEach(di => { if (di.aud === "grownups" && !g.items.some(i => i.label.toLowerCase() === di.label.toLowerCase())) g.items.push(di); });
+    });
+    tagKids(b);
+    b.v = 2; migrated = true;
+  }
   if (!b.answers || !Array.isArray(b.answers.basics) || !Array.isArray(b.answers.tabs)) b.answers = defaults().answers;
   b.answers.tabs.forEach(t => { t.items = t.items || []; t.prefix = t.prefix || ""; t.from = t.from || ""; });
   return b;
@@ -589,7 +693,9 @@ function back() {
 /* ---------- Rendering ---------- */
 function picHTML(it) {
   const u = photoURL(it.photo);
-  return u ? `<img src="${u}" alt="">` : `<span class="emo">${esc(it.emoji || "⭐")}</span>`;
+  if (u) return `<img src="${u}" alt="">`;
+  if (it.face) return `<img src="${faceURL(it.face, it.age === "child")}" alt="">`;
+  return `<span class="emo">${esc(it.emoji || "⭐")}</span>`;
 }
 function tileHTML(it, kind, data, extra = "") {
   const d = Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ");
@@ -598,10 +704,18 @@ function tileHTML(it, kind, data, extra = "") {
   return `<button class="tile k-${kind}" ${d}${pressed ? ' aria-pressed="true"' : ""} ${extra}><span class="pic">${picHTML(it)}</span><span class="word">${esc(it.label)}</span>${pen}</button>`;
 }
 const addHTML = src => `<button class="tile add" data-act="add" data-src="${esc(src)}"><span class="pic"><span class="emo" style="font-family:var(--f-ui)">+</span></span><span class="word">Add</span></button>`;
+function whoAge() { const w = slotItem(0); return w ? (w.age || "") : ""; }
+function fits(it, age) {
+  if (st.edit || !age) return true;
+  if (age === "adult") return it.aud !== "kids";
+  if (age === "child") return it.aud !== "grownups";
+  return true;
+}
+const forAge = (list, age) => list.filter(i => fits(i, age));
 function tilesHTML(list, src, step, mirror, act = "pick") {
   let h = list.map(it => tileHTML(it, kindOf(src), act === "pick" ? { act, step, src, id: it.id } : { act, src, id: it.id })).join("");
   if (st.edit && !mirror) h += addHTML(src);
-  if (!list.length && !st.edit) h += `<p class="empty">No pictures here yet. Hold the ⚙︎ button, then choose “Edit words and pictures” to add some.</p>`;
+  if (!list.length && !st.edit) h += `<p class="empty">No pictures here${whoAge() ? " for " + esc(slotItem(0).label) : ""} yet. Hold the ⚙︎ button, then choose “Edit words and pictures” to add some.</p>`;
   return h;
 }
 function tabsHTML() {
@@ -657,7 +771,8 @@ function renderBoard() {
     const t = curTab();
     if (!t) { b.innerHTML = `<p class="empty">There are no question pages yet.</p>`; return; }
     const linked = t.from && groupById(t.from);
-    let h = tilesHTML(tabItems(t), tabSrc(t), 0, !!linked, "answer");
+    const own = /^(i|i'm|my)\b/i.test(t.prefix || "");
+    let h = tilesHTML(own ? forAge(tabItems(t), "child") : tabItems(t), tabSrc(t), 0, !!linked, "answer");
     if (linked && st.edit) h += `<p class="empty">These pictures come from the “${esc(linked.label)}” group on the Talk side. Change them there, or tap a picture here.</p>`;
     b.innerHTML = `<div class="grid">${h}</div>`;
     return;
@@ -667,10 +782,10 @@ function renderBoard() {
     b.style.overflowY = "hidden";
     b.innerHTML = `<div class="cols">
       <section class="col k-who"><h2><span class="dot"></span>Who</h2><div class="grid">${tilesHTML(board.who, "who", 0)}</div></section>
-      <section class="col k-do"><h2><span class="dot"></span>Doing</h2><div class="grid">${tilesHTML(board.doing, "doing", 1)}</div></section>
+      <section class="col k-do"><h2><span class="dot"></span>Doing</h2><div class="grid">${tilesHTML(forAge(board.doing, whoAge()), "doing", 1)}</div></section>
       <section class="col k-${g ? g.kind : "thing"}"><h2><span class="dot"></span>What</h2><div class="tabs">${tabsHTML()}</div>
         ${st.edit && g ? `<button class="mini" data-act="edit-group">✎ Edit “${esc(g.label)}”</button>` : ""}
-        <div class="grid">${g ? tilesHTML(groupItems(g), g.id, 2, g.mirror) : ""}</div></section></div>`;
+        <div class="grid">${g ? tilesHTML(forAge(groupItems(g), whoAge()), g.id, 2, g.mirror) : ""}</div></section></div>`;
     return;
   }
   b.style.overflowY = "";
@@ -685,10 +800,10 @@ function renderBoard() {
   }
   let h;
   if (st.step === 0) h = tilesHTML(board.who, "who", 0);
-  else if (st.step === 1) h = tilesHTML(board.doing, "doing", 1);
+  else if (st.step === 1) h = tilesHTML(forAge(board.doing, whoAge()), "doing", 1);
   else {
     const g = curGroup();
-    h = g ? tilesHTML(groupItems(g), g.id, 2, g.mirror) : `<p class="empty">There are no groups yet.</p>`;
+    h = g ? tilesHTML(forAge(groupItems(g), whoAge()), g.id, 2, g.mirror) : `<p class="empty">There are no groups yet.</p>`;
     if (g && g.mirror && st.edit) h += `<p class="empty">This group shows the people from the Who page. Tap a person to change them there.</p>`;
   }
   b.innerHTML = `<div class="grid">${h}</div>`;
@@ -701,10 +816,11 @@ function renderQuick() {
 function renderBanner() {
   const bn = $("#banner");
   bn.hidden = !st.edit;
-  if (st.edit) bn.innerHTML = `<span>✎ Editing. Tap any picture to change it, or “Add” for a new one. Tap the Who, Doing and What boxes at the top to switch pages.</span><button data-act="done-edit">Done editing</button>`;
+  if (st.edit) bn.innerHTML = `<span>✎ Editing: tap a picture to change it. ${st.mode === "answer" ? "Tap a question to switch pages." : "Tap Who, Doing or What above to switch pages."}</span><button data-act="done-edit">Done</button>`;
 }
 function render() {
-  const [t, c] = SIZES[S().size] || SIZES.m;
+  let [t, c] = SIZES[S().size] || SIZES.m;
+  if (window.innerWidth < 520) { t = Math.round(t * .78); c = Math.round(c * .85); }
   const app = $("#app");
   app.style.setProperty("--tile", t + "px");
   app.style.setProperty("--tile-col", c + "px");
@@ -781,14 +897,31 @@ function srcKind(src) { return kindOf(src); }
 function tileSheetHTML() {
   const d = draft, kind = srcKind(d.src);
   const where = d.src === "who" ? "Who" : d.src === "doing" ? "Doing" : d.src === "quick" ? "Quick words" : d.src === "basics" ? "Answers" : ((groupById(d.src) || tabById(d.src) || {}).label || "");
-  const prev = d.photoData ? `<img src="${d.photoData}" alt="">` : `<span class="emo" id="pv-emo">${esc(d.emoji || "⭐")}</span>`;
+  const isWho = d.src === "who";
+  const audOK = d.src === "doing" || (groupById(d.src) && !groupById(d.src).mirror);
+  const modes = [["photo", "📷 Photo"]].concat(isWho ? [["face", "🙂 Cartoon"]] : []).concat([["emoji", "😀 Emoji"]]);
+  const sel = (id, opts, cur) => `<select id="${id}">${opts.map(([v, t]) => `<option value="${esc(v)}" ${v === cur ? "selected" : ""}>${esc(t)}</option>`).join("")}</select>`;
+  const f = d.face;
+  let picCtl = "";
+  if (d.pic === "photo") picCtl = `<div class="btn-row"><button class="btn primary" data-act="photo">📷 ${d.photoData ? "Change photo" : "Take or choose photo"}</button></div>`;
+  if (d.pic === "face") picCtl = `<div class="facegrid">
+      <label class="field">Hair${sel("fc-style", HAIRSTYLES, f.style)}</label>
+      <label class="field">Hair colour${sel("fc-hair", Object.entries(HAIR).map(([k, v]) => [k, v[0]]), f.hair)}</label>
+      <label class="field">Eyes${sel("fc-eyes", Object.entries(EYES).map(([k, v]) => [k, v[0]]), f.eyes)}</label>
+      <label class="field">Skin${sel("fc-skin", Object.entries(SKIN).map(([k, v]) => [k, v[0]]), f.skin)}</label>
+      <label class="field">Top${sel("fc-shirt", Object.entries(TOPS), f.shirt)}</label>
+      <label class="tog" style="align-self:end"><span>Glasses</span><input type="checkbox" id="fc-glasses" ${f.glasses ? "checked" : ""}></label>
+    </div>`;
+  if (d.pic === "emoji") picCtl = `<label class="field">Emoji <small>Tap the emoji key on the keyboard</small><input type="text" id="f-emoji" value="${esc(d.emoji)}" maxlength="16" autocomplete="off"></label>`;
   return `<div class="sh-head"><h2>${d.id ? "Change" : "New"} picture · ${esc(where)}</h2><button class="x" data-act="close" aria-label="Close">✕</button></div>
   <div class="ed">
-    <div class="ed-prev"><div class="tile k-${kind}"><span class="pic">${prev}</span><span class="word" id="pv-word">${esc(d.label || "word")}</span></div></div>
+    <div class="ed-prev"><div class="tile k-${kind}"><span class="pic" id="pv-pic">${draftPicHTML()}</span><span class="word" id="pv-word">${esc(d.label || "word")}</span></div></div>
     <div class="ed-fields">
-      <div class="btn-row"><button class="btn" data-act="photo">📷 Take or choose photo</button>${d.photoData ? `<button class="btn" data-act="nophoto">Use emoji instead</button>` : ""}</div>
-      ${d.photoData ? "" : `<label class="field">Emoji <small>Tap the emoji key on the keyboard</small><input type="text" id="f-emoji" value="${esc(d.emoji)}" maxlength="16" autocomplete="off"></label>`}
       <label class="field">Word on the picture<input type="text" id="f-label" value="${esc(d.label)}" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <div class="field">Picture<div class="picmode">${modes.map(([v, t]) => `<button type="button" data-act="picmode" data-m="${v}" aria-pressed="${d.pic === v}">${t}</button>`).join("")}</div></div>
+      ${picCtl}
+      ${isWho ? `<label class="field">Child or grown-up? <small>Grown-ups don't get words like “toilet” or “bath”. Children don't get “coffee” or “work”.</small>${sel("f-age", [["child", "Child"], ["adult", "Grown-up"], ["", "Either (show everything)"]], d.age)}</label>` : ""}
+      ${audOK ? `<label class="field">Show this word for${sel("f-aud", [["", "Everyone"], ["kids", "Children only"], ["grownups", "Grown-ups only"]], d.aud)}</label>` : ""}
       <label class="field">Say it as <small>Optional. For example “the toilet” or “a hug”</small><div class="inline"><input type="text" id="f-say" value="${esc(d.say)}" autocomplete="off" autocapitalize="off"><button type="button" data-act="test-say" aria-label="Hear it">🔊</button></div></label>
       ${d.src === "doing" ? `<label class="field">Then open this group<select id="f-go"><option value="">Stay on the last group</option>${board.groups.map(g => `<option value="${esc(g.id)}" ${d.go === g.id ? "selected" : ""}>${esc(g.emoji)} ${esc(g.label)}</option>`).join("")}</select></label>` : ""}
     </div>
@@ -801,9 +934,20 @@ function tileSheetHTML() {
     <span class="sp"></span><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-tile">Save</button>
   </div>`;
 }
+function draftPicHTML() {
+  const d = draft;
+  if (d.pic === "photo" && d.photoData) return `<img src="${d.photoData}" alt="">`;
+  if (d.pic === "face") return `<img src="${faceURL(d.face, d.age === "child")}" alt="">`;
+  if (d.pic === "photo") return `<span class="emo">📷</span>`;
+  return `<span class="emo" id="pv-emo">${esc(d.emoji || "⭐")}</span>`;
+}
 function openTile(src, id) {
   const it = id ? getItem(src, id) : null;
-  draft = { src, id: it ? it.id : null, label: it ? it.label : "", say: it ? it.say || "" : "", emoji: it ? it.emoji || "⭐" : "⭐",
+  draft = {
+    pic: it && it.photo ? "photo" : it && it.face ? "face" : "emoji",
+    face: Object.assign(F("short", "brown", "brown"), (it && it.face) || {}),
+    age: it ? it.age || "" : (src === "who" ? "adult" : ""),
+    aud: it ? it.aud || "" : "", src, id: it ? it.id : null, label: it ? it.label : "", say: it ? it.say || "" : "", emoji: it ? it.emoji || "⭐" : "⭐",
     photo: it ? it.photo || null : null, photoData: it && it.photo ? board.photos[it.photo] || null : null, go: it ? it.go || "" : "", confirmDel: false };
   openSheet("tile", tileSheetHTML());
 }
@@ -817,7 +961,11 @@ function saveTile() {
     if (d.photo && board.photos[d.photo] === d.photoData) pid = d.photo;
     else { pid = uid(); board.photos[pid] = d.photoData; }
   }
-  const fields = { label, say: d.say.trim(), emoji: d.emoji.trim() || "⭐", photo: pid };
+  if (d.pic === "photo" && !pid) { toast("Take or choose a photo first, or pick Cartoon or Emoji."); return; }
+  if (d.pic !== "photo") pid = null;
+  const fields = { label, say: d.say.trim(), emoji: d.emoji.trim() || "⭐", photo: pid, face: d.pic === "face" ? Object.assign({}, d.face) : null };
+  if (d.src === "who") fields.age = d.age;
+  if (d.src === "doing" || groupById(d.src)) fields.aud = d.aud;
   if (d.src === "doing") fields.go = d.go;
   if (d.id) Object.assign(list.find(i => i.id === d.id), fields);
   else list.push(Object.assign({ id: uid() }, fields));
@@ -935,7 +1083,15 @@ sheetBody.addEventListener("input", e => {
 });
 sheetBody.addEventListener("change", e => {
   const t = e.target;
-  if (sheetKind === "tile" && t.id === "f-go") draft.go = t.value;
+  if (sheetKind === "tile" && draft) {
+    if (t.id === "f-go") draft.go = t.value;
+    if (t.id === "f-age") { draft.age = t.value; $("#pv-pic").innerHTML = draftPicHTML(); }
+    if (t.id === "f-aud") draft.aud = t.value;
+    const fk = { "fc-style": "style", "fc-hair": "hair", "fc-eyes": "eyes", "fc-skin": "skin", "fc-shirt": "shirt" }[t.id];
+    if (fk) draft.face[fk] = t.value;
+    if (t.id === "fc-glasses") draft.face.glasses = t.checked;
+    if (fk || t.id === "fc-glasses") $("#pv-pic").innerHTML = draftPicHTML();
+  }
   if (sheetKind === "group" && t.name === "gkind") gdraft.kind = t.value;
   if (sheetKind === "group" && t.id === "g-from") gdraft.from = t.value;
   if (sheetKind !== "settings") return;
@@ -950,7 +1106,7 @@ sheetBody.addEventListener("change", e => {
 $("#photoInput").addEventListener("change", async e => {
   const f = e.target.files && e.target.files[0]; e.target.value = "";
   if (!f || !draft) return;
-  try { draft.photoData = await fileToPhoto(f); rerenderTileSheet(); }
+  try { draft.photoData = await fileToPhoto(f); draft.pic = "photo"; rerenderTileSheet(); }
   catch (err) { toast("That picture couldn't be opened. Try a different photo."); }
 });
 $("#importInput").addEventListener("change", async e => {
@@ -1018,6 +1174,7 @@ const acts = {
   "reset-yes"() { const s = S(); clearPhotoCache(); board = defaults(); board.settings = s; resetSentence(); save(); closeSheet(); render(); toast("Starting board restored."); },
   photo() { $("#photoInput").click(); },
   nophoto() { draft.photoData = null; rerenderTileSheet(); },
+  picmode(b) { draft.pic = b.dataset.m; rerenderTileSheet(); },
   "test-say"() { if (draft) say(draft.say.trim() || draft.label.trim()); },
   "save-tile"() { saveTile(); },
   "del-tile"() { draft.confirmDel = true; rerenderTileSheet(); },
@@ -1054,11 +1211,13 @@ gear.addEventListener("pointerleave", () => { clearTimeout(holdT); gear.classLis
 gear.addEventListener("contextmenu", e => e.preventDefault());
 gear.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSettings(); } });
 
+let rzT; window.addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(render, 150); });
+
 /* ---------- Start ---------- */
 render();
 if (synth) { loadVoices(); try { synth.addEventListener("voiceschanged", loadVoices); } catch (e) { synth.onvoiceschanged = loadVoices; } }
 store.get("board").then(saved => {
-  if (valid(saved)) { board = migrate(saved); render(); }
+  if (valid(saved)) { board = migrate(saved); render(); if (migrated) { save(); toast("Updated: the new family list is on the Who page."); } }
 }).catch(() => {});
 try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
 if ("serviceWorker" in navigator && window.self === window.top && location.protocol === "https:" && document.documentElement.dataset.app === "standalone") {
