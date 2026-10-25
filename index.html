@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="en-AU" data-app="standalone">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Wordsprout">
+<meta name="theme-color" content="#EDF0F4">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<title>Wordsprout</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: a fixed app shell. Sentence strip on top (Who · Doing · What),
+   one big picture grid in the middle, quick words along the bottom.
+   Tile colours follow the modified Fitzgerald Key used in AAC:
+   people yellow, actions green, things orange, describing/feelings blue, social pink. */
+:root{
+  --bg:#EDF0F4; --surface:#FFFFFF; --ink:#18202D; --muted:#5A6476; --line:#D3D9E2;
+  --accent:#0F6B6B; --accent-ink:#FFFFFF; --on-colour:#141A24; --scrim:rgba(12,16,24,.48);
+  --who:#E2AE00; --who-t:#FFF3BF;
+  --do:#2F9E44;  --do-t:#DDF4E1;
+  --thing:#E8730C; --thing-t:#FFE6CC;
+  --feel:#1F74D1; --feel-t:#DCEAFE;
+  --social:#D6408A; --social-t:#FFE0EF;
+  --danger:#C62A2A;
+  --shadow:0 1px 0 rgba(24,32,45,.07),0 3px 8px rgba(24,32,45,.06);
+  --f-word:"Andika","Atkinson Hyperlegible",system-ui,sans-serif;
+  --f-ui:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-emo:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;
+  --tile:132px; --tile-col:108px;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10151D; --surface:#1A212C; --ink:#EEF2F7; --muted:#A3ADBD; --line:#2C3644;
+    --accent:#3DBDB8; --accent-ink:#06231F; --scrim:rgba(0,0,0,.6);
+    --who:#F2C230; --who-t:#3A3112; --do:#4CC463; --do-t:#15301C;
+    --thing:#FF9A3D; --thing-t:#3A2513; --feel:#5AA2F5; --feel-t:#142944;
+    --social:#F26FAE; --social-t:#3B1A2B; --danger:#FF6B6B; --shadow:none;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#10151D; --surface:#1A212C; --ink:#EEF2F7; --muted:#A3ADBD; --line:#2C3644;
+  --accent:#3DBDB8; --accent-ink:#06231F; --scrim:rgba(0,0,0,.6);
+  --who:#F2C230; --who-t:#3A3112; --do:#4CC463; --do-t:#15301C;
+  --thing:#FF9A3D; --thing-t:#3A2513; --feel:#5AA2F5; --feel-t:#142944;
+  --social:#F26FAE; --social-t:#3B1A2B; --danger:#FF6B6B; --shadow:none;
+  color-scheme:dark;
+}
+html{height:100%;box-sizing:border-box;touch-action:manipulation;-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-ui);overflow:hidden}
+button{font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+.k-who{--c:var(--who);--t:var(--who-t)}
+.k-do{--c:var(--do);--t:var(--do-t)}
+.k-thing{--c:var(--thing);--t:var(--thing-t)}
+.k-feel{--c:var(--feel);--t:var(--feel-t)}
+.k-social{--c:var(--social);--t:var(--social-t)}
+
+.app{height:100%;display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+
+/* Sentence strip */
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;padding-block:12px 10px}
+.strip{flex:1 1 440px;display:flex;gap:8px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:8px}
+.slot{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:8px;height:76px;padding:6px 10px;
+  border-radius:15px;border:3px dashed var(--c);background:transparent;color:var(--muted)}
+.slot.filled{border-style:solid;background:var(--t);color:var(--ink);justify-content:flex-start}
+.slot.current{box-shadow:0 0 0 3px var(--surface),0 0 0 7px var(--c);animation:pulse 1.6s ease-in-out infinite}
+.slot.skipped{opacity:.45}
+.slot .emo{font-family:var(--f-emo);font-size:38px;line-height:1;flex:0 0 auto}
+.slot img{width:54px;height:54px;border-radius:10px;object-fit:cover;flex:0 0 auto}
+.slot .w{font-family:var(--f-word);font-weight:700;font-size:23px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.slot .ph{font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+@keyframes pulse{50%{box-shadow:0 0 0 3px var(--surface),0 0 0 11px var(--c)}}
+
+.actions{display:flex;gap:8px;margin-left:auto}
+.speak{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-width:108px;padding:6px 14px;
+  border-radius:22px;border:0;background:var(--accent);color:var(--accent-ink);font-weight:700;font-size:18px}
+.speak .ic{font-family:var(--f-emo);font-size:32px;line-height:1}
+.speak.talking{animation:talk .5s ease-in-out infinite alternate}
+@keyframes talk{to{transform:scale(1.05)}}
+.ctl{width:74px;border-radius:22px;background:var(--surface);border:1px solid var(--line);font-size:30px;line-height:1;display:grid;place-items:center}
+.ctl small{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--muted);margin-top:4px}
+.gear{position:relative;overflow:hidden}
+.gear::after{content:"";position:absolute;inset:0;background:var(--accent);opacity:.28;transform:scaleY(0);transform-origin:bottom}
+.gear.holding::after{animation:fillup 1.4s linear forwards}
+@keyframes fillup{to{transform:scaleY(1)}}
+
+/* Talk / Answer switch */
+.modesw{display:flex;flex-direction:column;gap:6px;flex:0 0 auto}
+.modesw button{flex:1;display:flex;align-items:center;gap:8px;padding:6px 16px 6px 12px;border-radius:16px;border:2px solid var(--line);
+  background:var(--surface);color:var(--muted);font-weight:700;font-size:18px}
+.modesw .emo{font-family:var(--f-emo);font-size:24px;line-height:1}
+.modesw button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.app.answer .talk-only{display:none}
+.app.answer .strip{overflow-x:auto}
+.slot.ans{flex:1 0 86px;flex-direction:column;justify-content:center;gap:3px;padding:4px 6px}
+.slot.ans .emo{font-size:32px}
+.slot.ans .w{font-size:18px;max-width:100%}
+.slot[aria-pressed="true"]{outline:4px solid var(--ink);outline-offset:-1px}
+.slot.add{--c:var(--muted)}
+
+/* Edit banner */
+.banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 12px 10px 16px;margin-bottom:8px;border-radius:16px;
+  background:var(--ink);color:var(--bg);font-size:16px;line-height:1.35}
+.banner span{flex:1 1 260px;min-width:0}
+.banner button{padding:10px 18px;border-radius:12px;border:0;background:var(--bg);color:var(--ink);font-weight:700;font-size:17px}
+
+/* Step heading */
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:2px 10px;min-height:58px}
+.ask{display:flex;align-items:center;gap:10px;font:700 28px/1 var(--f-word);color:var(--ink);flex:0 0 auto}
+.dot{width:20px;height:20px;border-radius:7px;background:var(--c);flex:0 0 auto}
+.tabs{display:flex;gap:8px;overflow-x:auto;flex:1 1 300px;min-width:0;padding:4px 2px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:8px 16px 8px 12px;border-radius:999px;border:2px solid var(--c);
+  background:var(--surface);color:var(--ink);font:700 19px/1.1 var(--f-word)}
+.tab .emo{font-family:var(--f-emo);font-size:24px;line-height:1}
+.tab.on{background:var(--c);color:var(--on-colour)}
+.tab-add{--c:var(--line);border-style:dashed;color:var(--muted)}
+.pill{padding:12px 20px;border-radius:14px;border:2px solid var(--line);background:var(--surface);font-weight:700;font-size:18px}
+.pill.go{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.head .pill{margin-left:auto}
+
+/* Board */
+.board{min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--tile),1fr));gap:12px;padding:8px;align-content:start}
+.tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;
+  min-height:calc(var(--tile) * 1.06);padding:8px 6px 10px;border-radius:18px;border:3px solid var(--c);background:var(--t);
+  color:var(--ink);box-shadow:var(--shadow);transition:transform .08s ease}
+.tile:active{transform:scale(.94)}
+.tile[aria-pressed="true"]{outline:4px solid var(--ink);outline-offset:3px}
+.tile .pic{height:calc(var(--tile) * .64);width:100%;display:grid;place-items:center}
+.tile .emo{font-family:var(--f-emo);font-size:calc(var(--tile) * .44);line-height:1}
+.tile img{width:calc(var(--tile) * .62);height:calc(var(--tile) * .62);max-width:100%;object-fit:cover;border-radius:12px;display:block}
+.tile .word{font-family:var(--f-word);font-weight:700;font-size:max(16px,calc(var(--tile) * .155));line-height:1.08;text-align:center;
+  overflow-wrap:anywhere;text-wrap:balance;max-width:100%}
+.tile.add{--c:var(--muted);--t:transparent;border-style:dashed;box-shadow:none;color:var(--muted)}
+.pen{position:absolute;top:-9px;right:-9px;width:32px;height:32px;border-radius:50%;background:var(--ink);color:var(--bg);
+  display:grid;place-items:center;font-size:17px;font-family:var(--f-ui)}
+.empty{padding:28px 12px;color:var(--muted);font-size:18px;max-width:46ch}
+
+/* All columns */
+.cols{display:grid;grid-template-columns:repeat(3,minmax(250px,1fr));gap:12px;height:100%;overflow-x:auto}
+.col{display:flex;flex-direction:column;min-height:0;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:12px 8px 4px}
+.col h2{display:flex;align-items:center;gap:10px;margin:0 8px 4px;font:700 24px/1.1 var(--f-word)}
+.col .tabs{flex:0 0 auto;padding-inline:6px}
+.col .grid{--tile:var(--tile-col);overflow-y:auto;flex:1;min-height:0}
+.col .mini{align-self:flex-start;margin:2px 8px}
+
+/* Finished sentence */
+.done{min-height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;padding:16px 0;text-align:center}
+.done .row{--tile:clamp(118px,21vw,200px);display:flex;flex-wrap:wrap;gap:18px;justify-content:center}
+.done .row .tile{width:calc(var(--tile) * 1.05);animation:pop .38s cubic-bezier(.2,1.4,.5,1) both}
+@keyframes pop{from{transform:scale(.6);opacity:0}}
+.said{margin:0;font:700 clamp(30px,4.6vw,52px)/1.15 var(--f-word);text-wrap:balance;max-width:24ch}
+.big-btns{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+.bb{padding:18px 28px;border-radius:18px;border:2px solid var(--line);background:var(--surface);font-weight:700;font-size:22px}
+.bb.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* Quick words */
+.quick{display:flex;gap:10px;overflow-x:auto;padding-block:10px 12px;border-top:1px solid var(--line);scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.quick .tile{--tile:82px;flex:0 0 96px;min-height:94px;padding:6px 4px 8px}
+
+/* Sheets */
+.sheet-wrap{position:fixed;inset:0;z-index:50;background:var(--scrim);display:grid;place-items:center;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) max(16px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 16px) max(16px,env(safe-area-inset-left,0px))}
+.sheet{width:min(640px,100%);max-height:100%;overflow:auto;background:var(--surface);color:var(--ink);border-radius:24px;padding:22px;
+  font-size:17px;line-height:1.4;-webkit-user-select:text;user-select:text}
+.sh-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.sh-head h2{margin:0;flex:1;font:700 26px/1.15 var(--f-word);text-wrap:balance}
+.x{width:48px;height:48px;border-radius:14px;border:1px solid var(--line);background:var(--bg);font-size:22px}
+fieldset{border:0;padding:0;margin:22px 0 0;display:flex;flex-direction:column;gap:10px}
+legend{font-size:13px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);padding:0;margin-bottom:8px}
+.opt{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:2px solid var(--line);border-radius:14px}
+.opt:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 9%,var(--surface))}
+.opt input{width:22px;height:22px;margin:2px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.opt b{display:block}
+.opt small{display:block;color:var(--muted);font-size:15px}
+.field{display:flex;flex-direction:column;gap:6px;font-weight:700}
+.field small{font-weight:400;color:var(--muted)}
+.field input[type=text],.field select{font:18px var(--f-ui);padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--ink);width:100%;min-width:0}
+.field input[type=range]{width:100%;accent-color:var(--accent)}
+.inline{display:flex;gap:8px}
+.inline button{flex:0 0 auto;width:52px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-size:22px}
+.seg{display:flex;gap:8px}
+.seg label{flex:1;text-align:center;padding:12px 8px;border:2px solid var(--line);border-radius:12px;font-weight:700}
+.seg label:has(input:checked){border-color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,var(--surface))}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.tog{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:6px 0}
+.tog input{width:24px;height:24px;accent-color:var(--accent);flex:0 0 auto}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap}
+.btn{padding:12px 18px;border-radius:12px;border:2px solid var(--line);background:var(--bg);font-weight:700;font-size:17px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:var(--surface)}
+.btn.ghost-danger{color:var(--danger);background:transparent}
+.btn.wide{width:100%;padding:16px;font-size:19px}
+.note{color:var(--muted);font-size:15px;margin:0}
+.warn{font-weight:700;color:var(--danger)}
+.ed{display:flex;gap:18px;flex-wrap:wrap}
+.ed-prev{--tile:150px;flex:0 0 auto}
+.ed-prev .tile{width:160px;pointer-events:none}
+.ed-fields{flex:1 1 260px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.sh-foot{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--line)}
+.sh-foot .sp{flex:1}
+.mini{padding:8px 14px;border-radius:999px;border:2px dashed var(--muted);background:transparent;font-weight:700;font-size:16px;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 116px);transform:translateX(-50%);z-index:60;
+  max-width:min(520px,calc(100% - 32px));padding:14px 20px;border-radius:16px;background:var(--ink);color:var(--bg);font-size:17px;text-align:center}
+
+@media (max-width:720px){
+  .slot{height:64px;padding:4px 8px}
+  .slot .emo{font-size:30px} .slot img{width:44px;height:44px} .slot .w{font-size:18px}
+  .actions{flex:1 1 100%}
+  .speak{flex:1;flex-direction:row;gap:10px;min-height:58px}
+  .ctl{width:64px}
+  .modesw{flex:1 1 100%;flex-direction:row}
+  .modesw button{justify-content:center;min-height:48px}
+  .ask{font-size:24px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+</style>
+
+<div class="app" id="app">
+  <header class="top">
+    <div class="modesw" role="group" aria-label="Talk or answer">
+      <button data-act="mode" data-m="talk" aria-pressed="true"><span class="emo" aria-hidden="true">💬</span>Talk</button>
+      <button data-act="mode" data-m="answer" aria-pressed="false"><span class="emo" aria-hidden="true">🙋‍♀️</span>Answer</button>
+    </div>
+    <div class="strip" id="strip"></div>
+    <div class="actions">
+      <button class="speak" id="speakBtn" data-act="speak"><span class="ic" aria-hidden="true">🔊</span><span id="speakLbl">Say it</span></button>
+      <button class="ctl talk-only" data-act="back" aria-label="Remove last word"><span>⌫</span></button>
+      <button class="ctl talk-only" data-act="clear" aria-label="Clear sentence"><span>✕</span></button>
+      <button class="ctl gear" id="gear" aria-label="Grown-up settings. Press and hold.">⚙︎</button>
+    </div>
+  </header>
+  <div class="banner" id="banner" hidden></div>
+  <div class="head" id="head"></div>
+  <main class="board" id="board"></main>
+  <nav class="quick" id="quick" aria-label="Quick words"></nav>
+</div>
+
+<div class="sheet-wrap" id="sheet" hidden><div class="sheet" id="sheetBody" role="dialog" aria-modal="true"></div></div>
+<input type="file" id="photoInput" accept="image/*" hidden>
+<input type="file" id="importInput" accept="application/json,.json" hidden>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const T = (label, emoji, say, extra) => Object.assign({ id: uid(), label, emoji, say: say || "" }, extra || {});
+
+/* ---------- Starting vocabulary ---------- */
+function defaults() {
+  return {
+    v: 1,
+    settings: { mode: "strict", speakWord: true, speakSentence: true, grammar: true, voice: "", rate: 0.9, pitch: 1.1, size: "m", showQuick: true },
+    who: [
+      T("I", "👧"), T("you", "👉"), T("Mum", "👩"), T("Dad", "👨"), T("Brother", "👦"),
+      T("Grandma", "👵"), T("Grandad", "👴"), T("Teacher", "🧑‍🏫"), T("Friend", "🧒"), T("we", "👨‍👩‍👧")
+    ],
+    doing: [
+      T("want", "🤲", "", { go: "food" }), T("need", "🙏", "", { go: "care" }), T("don't want", "🙅‍♀️", "", { go: "food" }),
+      T("like", "😍", "", { go: "food" }), T("don't like", "😖", "", { go: "food" }), T("feel", "💭", "", { go: "feelings" }),
+      T("go", "🚶", "", { go: "places" }), T("eat", "🍴", "", { go: "food" }), T("drink", "🥤", "", { go: "drinks" }),
+      T("play", "🧸", "", { go: "play" }), T("watch", "👀", "", { go: "play" }),
+      T("can", "💪", "", { go: "play" }), T("can't", "🚫", "", { go: "play" })
+    ],
+    groups: [
+      { id: "food", label: "Food", emoji: "🍎", kind: "thing", items: [
+        T("apple","🍎"), T("banana","🍌"), T("strawberries","🍓"), T("grapes","🍇"), T("watermelon","🍉"), T("carrot","🥕"),
+        T("sandwich","🥪"), T("toast","🍞"), T("cereal","🥣"), T("cheese","🧀"), T("crackers","🍘"), T("pasta","🍝"),
+        T("rice","🍚"), T("chicken","🍗"), T("eggs","🥚"), T("pizza","🍕"), T("chips","🍟"), T("biscuit","🍪", "a biscuit"),
+        T("ice cream","🍦"), T("icy pole","🍧", "an icy pole"), T("snack","🍿", "a snack") ] },
+      { id: "drinks", label: "Drinks", emoji: "🥛", kind: "thing", items: [
+        T("water","💧"), T("milk","🥛"), T("juice","🧃"), T("hot chocolate","☕") ] },
+      { id: "play", label: "Play", emoji: "🧸", kind: "thing", items: [
+        T("iPad","📱"), T("TV","📺"), T("music","🎵"), T("book","📖", "a book"), T("ball","⚽"), T("blocks","🧱"),
+        T("puzzle","🧩", "a puzzle"), T("teddy","🧸"), T("bubbles","🫧"), T("drawing","🖍️"), T("painting","🎨"),
+        T("bike","🚲"), T("scooter","🛴"), T("trampoline","🤸"), T("dancing","💃"), T("games","🎲"), T("swimming","🏊‍♀️") ] },
+      { id: "places", label: "Places", emoji: "🏠", kind: "thing", items: [
+        T("home","🏠"), T("outside","🌳"), T("park","🛝", "to the park"), T("school","🏫", "to school"),
+        T("shops","🛒", "to the shops"), T("beach","🏖️", "to the beach"), T("pool","🏊", "to the pool"),
+        T("Grandma's","🏡", "to Grandma's house"), T("car","🚗", "in the car"), T("bed","🛏️", "to bed"),
+        T("doctor","🩺", "to the doctor"), T("library","📚", "to the library") ] },
+      { id: "care", label: "Me & body", emoji: "🛁", kind: "thing", items: [
+        T("toilet","🚽", "the toilet"), T("bath","🛁", "a bath"), T("shower","🚿", "a shower"), T("sleep","😴"),
+        T("hug","🤗", "a hug"), T("break","⏸️", "a break"), T("quiet","🤫", "quiet time"), T("tissue","🤧", "a tissue"),
+        T("band-aid","🩹", "a band-aid"), T("medicine","💊"), T("brush teeth","🪥"), T("wash hands","🧼"), T("change clothes","👕") ] },
+      { id: "feelings", label: "Feelings", emoji: "😊", kind: "feel", items: [
+        T("happy","😀"), T("sad","😢"), T("angry","😠"), T("scared","😨"), T("tired","🥱"), T("sick","🤒"), T("sore","🤕"),
+        T("hungry","😋"), T("thirsty","👅"), T("excited","🤩"), T("bored","😑"), T("worried","😟"), T("hot","🥵"),
+        T("cold","🥶"), T("silly","🤪"), T("okay","🙂"), T("loved","🥰") ] },
+      { id: "people", label: "People", emoji: "👪", kind: "who", mirror: true, items: [] }
+    ],
+    quick: [
+      T("yes","👍"), T("no","👎"), T("help","🆘", "help me please"), T("stop","✋"), T("more","➕", "more please"),
+      T("finished","✅", "I'm finished"), T("wait","⏳"), T("don't know","🤷‍♀️", "I don't know"), T("hello","👋")
+    ],
+    answers: {
+      basics: [
+        T("yes","👍"), T("no","👎"), T("maybe","🤔"), T("don't know","🤷‍♀️", "I don't know"), T("again?","🔁", "Can you say that again?")
+      ],
+      tabs: [
+        { id: "a-feel", label: "How do you feel?", emoji: "😊", kind: "feel", prefix: "I feel", from: "feelings", items: [] },
+        { id: "a-want", label: "What do you want?", emoji: "🤲", kind: "thing", prefix: "I want", from: "food", items: [] },
+        { id: "a-do", label: "What do you want to do?", emoji: "🧸", kind: "thing", prefix: "I want", from: "play", items: [] },
+        { id: "a-who", label: "Who?", emoji: "👪", kind: "who", prefix: "", from: "people", items: [] },
+        { id: "a-where", label: "Where?", emoji: "📍", kind: "thing", prefix: "", from: "places", items: [] },
+        { id: "a-when", label: "When?", emoji: "🕐", kind: "feel", prefix: "", from: "", items: [
+          T("now","⏰"), T("later","⏳"), T("soon","🔜"), T("after","➡️"), T("before","⬅️"), T("today","📅"),
+          T("tomorrow","🌅"), T("yesterday","🌇"), T("morning","☀️", "in the morning"), T("night","🌙", "at night") ] },
+        { id: "a-how", label: "How was it?", emoji: "⭐", kind: "feel", prefix: "", from: "", items: [
+          T("great","🤩", "It was great"), T("good","🙂", "It was good"), T("okay","😐", "It was okay"), T("bad","🙁", "It was bad"),
+          T("fun","🎉", "It was fun"), T("boring","😑", "It was boring"), T("too loud","🔊", "It was too loud"),
+          T("too hard","😣", "It was too hard"), T("scary","😨", "It was scary") ] },
+        { id: "a-which", label: "Which one?", emoji: "👆", kind: "social", prefix: "", from: "", items: [
+          T("this one","👇"), T("that one","👉"), T("both","✌️"), T("neither","🙅‍♀️", "neither of them"),
+          T("first one","1️⃣", "the first one"), T("second one","2️⃣", "the second one"), T("something else","🔄") ] },
+        { id: "a-much", label: "How much?", emoji: "🤏", kind: "feel", prefix: "", from: "", items: [
+          T("a little","🤏"), T("a lot","🙌"), T("more","➕"), T("enough","✋", "that's enough"), T("all of it","💯") ] }
+      ]
+    },
+    photos: {}
+  };
+}
+
+let board = defaults();
+const st = { mode: "talk", atab: "a-feel", last: null, step: 0, slots: [null, null, null], skip: [false, false, false], done: false, group: "food", edit: false };
+const STEPS = [{ name: "Who", kind: "who" }, { name: "Doing", kind: "do" }, { name: "What", kind: "thing" }];
+const SIZES = { s: [104, 92], m: [132, 108], l: [170, 132] };
+
+/* ---------- Lookups ---------- */
+const S = () => board.settings;
+const groupById = id => board.groups.find(g => g.id === id);
+function curGroup() {
+  let g = groupById(st.group);
+  if (!g) { g = board.groups[0]; st.group = g ? g.id : null; }
+  return g;
+}
+function groupItems(g) {
+  if (!g) return [];
+  if (g.mirror) return board.who.filter(p => !["i", "we"].includes(p.label.trim().toLowerCase()));
+  return g.items;
+}
+const tabById = id => board.answers.tabs.find(t => t.id === id);
+function curTab() {
+  let t = tabById(st.atab);
+  if (!t) { t = board.answers.tabs[0]; st.atab = t ? t.id : null; }
+  return t;
+}
+function tabItems(t) { return !t ? [] : t.from && groupById(t.from) ? groupItems(groupById(t.from)) : t.items; }
+function tabSrc(t) { return t.from && groupById(t.from) ? t.from : t.id; }
+function listFor(src) {
+  if (src === "basics") return board.answers.basics;
+  const tb = tabById(src); if (tb) return tb.items;
+  if (src === "who") return board.who;
+  if (src === "doing") return board.doing;
+  if (src === "quick") return board.quick;
+  const g = groupById(src);
+  return g ? (g.mirror ? board.who : g.items) : null;
+}
+const getItem = (src, id) => (listFor(src) || []).find(i => i.id === id) || null;
+function kindOf(src) {
+  if (src === "who") return "who";
+  if (src === "doing") return "do";
+  if (src === "quick" || src === "basics") return "social";
+  const tb = tabById(src); if (tb) return tb.kind;
+  const g = groupById(src);
+  return g ? g.kind : "thing";
+}
+const slotItem = i => st.slots[i] ? getItem(st.slots[i].src, st.slots[i].id) : null;
+function slotKind(i) {
+  if (i < 2) return STEPS[i].kind;
+  if (st.slots[2]) return kindOf(st.slots[2].src);
+  const g = curGroup();
+  return g ? g.kind : "thing";
+}
+const sayOf = it => (it.say && it.say.trim()) || it.label;
+
+/* ---------- Photos ---------- */
+const photoCache = new Map();
+function dataURLtoBlob(d) {
+  const [head, b64] = d.split(",");
+  const mime = (head.match(/data:([^;]+)/) || [])[1] || "image/jpeg";
+  const bin = atob(b64); const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], { type: mime });
+}
+function photoURL(pid) {
+  if (!pid) return null;
+  if (!photoCache.has(pid)) {
+    const d = board.photos && board.photos[pid];
+    if (!d) return null;
+    try { photoCache.set(pid, URL.createObjectURL(dataURLtoBlob(d))); } catch (e) { photoCache.set(pid, d); }
+  }
+  return photoCache.get(pid);
+}
+function clearPhotoCache() {
+  photoCache.forEach(u => { if (String(u).startsWith("blob:")) URL.revokeObjectURL(u); });
+  photoCache.clear();
+}
+function gcPhotos() {
+  const used = new Set();
+  const mark = l => l.forEach(i => i.photo && used.add(i.photo));
+  mark(board.who); mark(board.doing); mark(board.quick); board.groups.forEach(g => mark(g.items));
+  mark(board.answers.basics); board.answers.tabs.forEach(t => mark(t.items));
+  Object.keys(board.photos).forEach(k => { if (!used.has(k)) { delete board.photos[k]; const u = photoCache.get(k); if (u && String(u).startsWith("blob:")) URL.revokeObjectURL(u); photoCache.delete(k); } });
+}
+function fileToPhoto(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const size = 360, s = Math.min(img.naturalWidth, img.naturalHeight);
+      const c = document.createElement("canvas"); c.width = c.height = size;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, size, size);
+      URL.revokeObjectURL(url);
+      res(c.toDataURL("image/jpeg", 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error("bad image")); };
+    img.src = url;
+  });
+}
+
+/* ---------- Saving on this device ---------- */
+const store = {
+  db: null,
+  open() {
+    if (this.db) return Promise.resolve(this.db);
+    return new Promise((res, rej) => {
+      const r = indexedDB.open("wordsprout", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("kv");
+      r.onsuccess = () => { this.db = r.result; res(r.result); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  async get(k) {
+    try {
+      const db = await this.open();
+      return await new Promise((res, rej) => { const q = db.transaction("kv").objectStore("kv").get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+    } catch (e) {
+      try { const s = localStorage.getItem("wordsprout:" + k); return s ? JSON.parse(s) : undefined; } catch (e2) { return undefined; }
+    }
+  },
+  async set(k, v) {
+    try {
+      const db = await this.open();
+      await new Promise((res, rej) => { const t = db.transaction("kv", "readwrite"); t.objectStore("kv").put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); });
+    } catch (e) {
+      try { localStorage.setItem("wordsprout:" + k, JSON.stringify(v)); } catch (e2) { toast("Couldn't save changes on this device. Try saving a backup file."); }
+    }
+  }
+};
+let saveTimer;
+function save() { clearTimeout(saveTimer); saveTimer = setTimeout(() => store.set("board", JSON.parse(JSON.stringify(board))), 250); }
+function valid(b) { return b && Array.isArray(b.who) && Array.isArray(b.doing) && Array.isArray(b.groups) && Array.isArray(b.quick); }
+function migrate(b) {
+  b.settings = Object.assign({}, defaults().settings, b.settings || {});
+  b.photos = b.photos || {};
+  b.groups.forEach(g => { g.items = g.items || []; g.kind = g.kind || "thing"; });
+  if (!b.answers || !Array.isArray(b.answers.basics) || !Array.isArray(b.answers.tabs)) b.answers = defaults().answers;
+  b.answers.tabs.forEach(t => { t.items = t.items || []; t.prefix = t.prefix || ""; t.from = t.from || ""; });
+  return b;
+}
+
+/* ---------- Speech ---------- */
+const synth = "speechSynthesis" in window ? window.speechSynthesis : null;
+let voices = [];
+function loadVoices() {
+  if (!synth) return;
+  try {
+    const all = synth.getVoices();
+    const en = all.filter(v => /^en/i.test(v.lang));
+    voices = (en.length ? en : all).slice().sort((a, b) => rankVoice(a) - rankVoice(b) || a.name.localeCompare(b.name));
+  } catch (e) { voices = []; }
+  if (sheetKind === "settings") fillVoices();
+}
+function rankVoice(v) { return v.lang === "en-AU" ? 0 : /en-GB/.test(v.lang) ? 1 : /en-US/.test(v.lang) ? 2 : 3; }
+function pickVoice() { return voices.find(v => v.voiceURI === S().voice) || voices.find(v => v.lang === "en-AU") || voices.find(v => v.default) || voices[0] || null; }
+const speakBtn = $("#speakBtn");
+function say(text) {
+  if (!text) return;
+  if (!synth) { toast("This browser can't speak out loud. Try Safari or Chrome."); return; }
+  const go = () => {
+    const u = new SpeechSynthesisUtterance(text);
+    const v = pickVoice();
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-AU";
+    u.rate = S().rate; u.pitch = S().pitch;
+    u.onstart = () => speakBtn.classList.add("talking");
+    u.onend = u.onerror = () => speakBtn.classList.remove("talking");
+    synth.speak(u);
+  };
+  if (synth.speaking || synth.pending) { synth.cancel(); setTimeout(go, 60); } else go();
+}
+
+/* ---------- Sentence ---------- */
+function isThird(p) { return !["i", "you", "we", "they", "me"].includes(sayOf(p).trim().toLowerCase()); }
+function conj(phrase) {
+  const m = phrase.match(/^(\S+)(.*)$/); if (!m) return phrase;
+  let w = m[1]; const rest = m[2]; const lw = w.toLowerCase().replace("’", "'");
+  const map = { "don't": "doesn't", "do": "does", "have": "has", "go": "goes", "am": "is", "are": "is", "be": "is" };
+  const keep = ["can", "can't", "cannot", "will", "won't", "would", "could", "should", "must", "may", "might", "doesn't", "is", "was", "has", "does"];
+  if (map[lw]) w = map[lw];
+  else if (keep.includes(lw) || (/s$/.test(lw) && !/ss$/.test(lw))) { /* already fine */ }
+  else if (/^[a-z]+$/.test(lw)) w = /(s|sh|ch|x|z|o)$/.test(lw) ? w + "es" : /[^aeiou]y$/.test(lw) ? w.slice(0, -1) + "ies" : w + "s";
+  return w + rest;
+}
+function sentence() {
+  const who = slotItem(0), doing = slotItem(1), what = slotItem(2), parts = [];
+  if (who) parts.push(sayOf(who));
+  if (doing) { let d = sayOf(doing); if (who && S().grammar && isThird(who)) d = conj(d); parts.push(d); }
+  if (what) parts.push(sayOf(what));
+  return parts.join(" ");
+}
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+function firstOpen() { for (let i = 0; i < 3; i++) if (!st.slots[i] && !st.skip[i]) return i; return -1; }
+function resetSentence() { st.slots = [null, null, null]; st.skip = [false, false, false]; st.done = false; st.step = 0; }
+
+function pick(step, src, id) {
+  const item = getItem(src, id); if (!item) return;
+  st.slots[step] = { src, id }; st.skip[step] = false;
+  if (step === 1 && item.go && groupById(item.go)) st.group = item.go;
+  if (S().mode === "all") {
+    const full = st.slots.every(Boolean);
+    st.done = full;
+    if (full && S().speakSentence) say(sentence()); else if (S().speakWord) say(sayOf(item));
+    render(); return;
+  }
+  const next = firstOpen();
+  if (next === -1) finish();
+  else { if (S().speakWord) say(sayOf(item)); st.step = next; render(); }
+}
+function answer(src, id) {
+  const it = getItem(src, id); if (!it) return;
+  let text = sayOf(it);
+  if (src !== "basics") {
+    const t = curTab();
+    if (t) {
+      const linked = t.from && groupById(t.from);
+      const word = linked ? it.label : sayOf(it);
+      text = (t.prefix ? t.prefix.trim() + " " : "") + word;
+    }
+  }
+  st.last = { src, id, text };
+  say(text); render();
+}
+function finish() {
+  st.done = true;
+  if (S().speakSentence) say(sentence());
+  render();
+}
+function skipStep() {
+  st.skip[st.step] = true;
+  const n = firstOpen();
+  if (n !== -1) { st.step = n; render(); return; }
+  if (st.slots.some(Boolean)) finish(); else { resetSentence(); render(); }
+}
+function back() {
+  let i = 2; while (i >= 0 && !st.slots[i]) i--;
+  if (i < 0) { resetSentence(); render(); return; }
+  st.slots[i] = null;
+  for (let j = i; j < 3; j++) st.skip[j] = false;
+  st.done = false; st.step = i; render();
+}
+
+/* ---------- Rendering ---------- */
+function picHTML(it) {
+  const u = photoURL(it.photo);
+  return u ? `<img src="${u}" alt="">` : `<span class="emo">${esc(it.emoji || "⭐")}</span>`;
+}
+function tileHTML(it, kind, data, extra = "") {
+  const d = Object.entries(data).map(([k, v]) => `data-${k}="${esc(v)}"`).join(" ");
+  const pressed = (data.act === "pick" && st.slots[data.step] && st.slots[data.step].id === it.id) || (data.act === "answer" && st.last && st.last.id === it.id);
+  const pen = st.edit && data.act !== "again" ? '<span class="pen" aria-hidden="true">✎</span>' : "";
+  return `<button class="tile k-${kind}" ${d}${pressed ? ' aria-pressed="true"' : ""} ${extra}><span class="pic">${picHTML(it)}</span><span class="word">${esc(it.label)}</span>${pen}</button>`;
+}
+const addHTML = src => `<button class="tile add" data-act="add" data-src="${esc(src)}"><span class="pic"><span class="emo" style="font-family:var(--f-ui)">+</span></span><span class="word">Add</span></button>`;
+function tilesHTML(list, src, step, mirror, act = "pick") {
+  let h = list.map(it => tileHTML(it, kindOf(src), act === "pick" ? { act, step, src, id: it.id } : { act, src, id: it.id })).join("");
+  if (st.edit && !mirror) h += addHTML(src);
+  if (!list.length && !st.edit) h += `<p class="empty">No pictures here yet. Hold the ⚙︎ button, then choose “Edit words and pictures” to add some.</p>`;
+  return h;
+}
+function tabsHTML() {
+  let h = board.groups.map(g => `<button class="tab k-${g.kind}${g.id === st.group ? " on" : ""}" data-act="tab" data-id="${esc(g.id)}"><span class="emo">${esc(g.emoji)}</span>${esc(g.label)}</button>`).join("");
+  if (st.edit) h += `<button class="tab tab-add" data-act="add-group">+ New group</button>`;
+  return h;
+}
+const guided = () => S().mode !== "all";
+
+function answerTabsHTML() {
+  let h = board.answers.tabs.map(t => `<button class="tab k-${t.kind}${t.id === st.atab ? " on" : ""}" data-act="atab" data-id="${esc(t.id)}"><span class="emo">${esc(t.emoji)}</span>${esc(t.label)}</button>`).join("");
+  if (st.edit) h += `<button class="tab tab-add" data-act="add-group">+ New question</button>`;
+  return h;
+}
+function renderStrip() {
+  if (st.mode === "answer") {
+    $("#strip").innerHTML = board.answers.basics.map(it =>
+      `<button class="slot ans filled k-social" data-act="answer" data-src="basics" data-id="${esc(it.id)}"${st.last && st.last.id === it.id ? ' aria-pressed="true"' : ""}>${picHTML(it)}<span class="w">${esc(it.label)}</span></button>`).join("")
+      + (st.edit ? `<button class="slot ans add" data-act="add" data-src="basics"><span class="emo" style="font-family:var(--f-ui)">+</span><span class="w">Add</span></button>` : "");
+    return;
+  }
+  $("#strip").innerHTML = [0, 1, 2].map(i => {
+    const it = slotItem(i), cur = guided() && !st.done && st.step === i;
+    const cls = ["slot", "k-" + slotKind(i), it ? "filled" : "", st.skip[i] ? "skipped" : "", cur ? "current" : ""].join(" ");
+    const inner = it ? `${picHTML(it)}<span class="w">${esc(it.label)}</span>` : `<span class="ph">${st.skip[i] ? "skipped" : STEPS[i].name}</span>`;
+    return `<button class="${cls}" data-act="slot" data-i="${i}" aria-label="${STEPS[i].name}: ${it ? esc(it.label) : "empty"}">${inner}</button>`;
+  }).join("");
+}
+function renderHead() {
+  const head = $("#head");
+  if (st.mode === "answer") {
+    head.hidden = false;
+    const t = curTab();
+    head.innerHTML = `<div class="tabs">${answerTabsHTML()}</div>` + (st.edit && t ? `<button class="mini" data-act="edit-group">✎ Edit “${esc(t.label)}”</button>` : "");
+    return;
+  }
+  if (!guided() || st.done) { head.hidden = true; head.innerHTML = ""; return; }
+  head.hidden = false;
+  const k = st.step < 2 ? STEPS[st.step].kind : (curGroup() ? curGroup().kind : "thing");
+  let h = `<div class="ask k-${k}"><span class="dot"></span>${STEPS[st.step].name}?</div>`;
+  if (st.step === 2) h += `<div class="tabs">${tabsHTML()}</div>`;
+  if (st.edit && st.step === 2 && curGroup()) h += `<button class="mini" data-act="edit-group">✎ Edit “${esc(curGroup().label)}”</button>`;
+  if (!st.edit && S().mode === "skip") {
+    if (st.step < 2) h += `<button class="pill" data-act="skip">Skip ›</button>`;
+    else if (st.slots.some(Boolean)) h += `<button class="pill go" data-act="skip">Say it ✓</button>`;
+  }
+  head.innerHTML = h;
+}
+function renderBoard() {
+  const b = $("#board");
+  if (st.mode === "answer") {
+    b.style.overflowY = "";
+    const t = curTab();
+    if (!t) { b.innerHTML = `<p class="empty">There are no question pages yet.</p>`; return; }
+    const linked = t.from && groupById(t.from);
+    let h = tilesHTML(tabItems(t), tabSrc(t), 0, !!linked, "answer");
+    if (linked && st.edit) h += `<p class="empty">These pictures come from the “${esc(linked.label)}” group on the Talk side. Change them there, or tap a picture here.</p>`;
+    b.innerHTML = `<div class="grid">${h}</div>`;
+    return;
+  }
+  if (!guided()) {
+    const g = curGroup();
+    b.style.overflowY = "hidden";
+    b.innerHTML = `<div class="cols">
+      <section class="col k-who"><h2><span class="dot"></span>Who</h2><div class="grid">${tilesHTML(board.who, "who", 0)}</div></section>
+      <section class="col k-do"><h2><span class="dot"></span>Doing</h2><div class="grid">${tilesHTML(board.doing, "doing", 1)}</div></section>
+      <section class="col k-${g ? g.kind : "thing"}"><h2><span class="dot"></span>What</h2><div class="tabs">${tabsHTML()}</div>
+        ${st.edit && g ? `<button class="mini" data-act="edit-group">✎ Edit “${esc(g.label)}”</button>` : ""}
+        <div class="grid">${g ? tilesHTML(groupItems(g), g.id, 2, g.mirror) : ""}</div></section></div>`;
+    return;
+  }
+  b.style.overflowY = "";
+  if (st.done && !st.edit) {
+    const items = [0, 1, 2].map(i => ({ it: slotItem(i), kind: slotKind(i) })).filter(x => x.it);
+    b.innerHTML = `<div class="done">
+      <div class="row">${items.map((x, n) => tileHTML(x.it, x.kind, { act: "again" }, `style="animation-delay:${n * 110}ms"`)).join("")}</div>
+      <p class="said">${esc(cap(sentence()))}.</p>
+      <div class="big-btns"><button class="bb primary" data-act="again">🔊 Say it again</button><button class="bb" data-act="clear">New sentence</button></div>
+    </div>`;
+    return;
+  }
+  let h;
+  if (st.step === 0) h = tilesHTML(board.who, "who", 0);
+  else if (st.step === 1) h = tilesHTML(board.doing, "doing", 1);
+  else {
+    const g = curGroup();
+    h = g ? tilesHTML(groupItems(g), g.id, 2, g.mirror) : `<p class="empty">There are no groups yet.</p>`;
+    if (g && g.mirror && st.edit) h += `<p class="empty">This group shows the people from the Who page. Tap a person to change them there.</p>`;
+  }
+  b.innerHTML = `<div class="grid">${h}</div>`;
+}
+function renderQuick() {
+  const q = $("#quick");
+  q.hidden = st.mode === "answer" || !(S().showQuick || st.edit);
+  q.innerHTML = board.quick.map(it => tileHTML(it, "social", { act: "quick", id: it.id })).join("") + (st.edit ? addHTML("quick") : "");
+}
+function renderBanner() {
+  const bn = $("#banner");
+  bn.hidden = !st.edit;
+  if (st.edit) bn.innerHTML = `<span>✎ Editing. Tap any picture to change it, or “Add” for a new one. Tap the Who, Doing and What boxes at the top to switch pages.</span><button data-act="done-edit">Done editing</button>`;
+}
+function render() {
+  const [t, c] = SIZES[S().size] || SIZES.m;
+  const app = $("#app");
+  app.style.setProperty("--tile", t + "px");
+  app.style.setProperty("--tile-col", c + "px");
+  app.classList.toggle("answer", st.mode === "answer");
+  document.querySelectorAll(".modesw button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.m === st.mode)));
+  $("#speakLbl").textContent = st.mode === "answer" ? "Say again" : "Say it";
+  curTab();
+  curGroup();
+  renderStrip(); renderBanner(); renderHead(); renderBoard(); renderQuick();
+}
+
+/* ---------- Toast ---------- */
+let toastT;
+function toast(msg) {
+  const t = $("#toast"); t.textContent = msg; t.hidden = false;
+  clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200);
+}
+
+/* ---------- Sheets ---------- */
+const sheet = $("#sheet"), sheetBody = $("#sheetBody");
+let sheetKind = null, draft = null, gdraft = null, confirmReset = false;
+function openSheet(kind, html) { sheetKind = kind; sheetBody.innerHTML = html; sheet.hidden = false; sheetBody.scrollTop = 0; }
+function closeSheet() { sheet.hidden = true; sheetKind = null; draft = null; gdraft = null; confirmReset = false; }
+sheet.addEventListener("click", e => { if (e.target === sheet) closeSheet(); });
+
+function settingsHTML() {
+  const s = S();
+  const modes = [
+    ["strict", "Step by step, full sentence", "Who, then Doing, then What. Every step has to be filled."],
+    ["skip", "Step by step, can skip", "Same steps with a Skip button, so “toilet” on its own is allowed."],
+    ["all", "All columns at once", "Who, Doing and What side by side, for when she knows the pattern."]
+  ];
+  /* Answer side always speaks with one tap. */
+  const tog = (key, text) => `<label class="tog"><span>${text}</span><input type="checkbox" data-key="${key}" ${s[key] ? "checked" : ""}></label>`;
+  return `<div class="sh-head"><h2>Grown-up settings</h2><button class="x" data-act="close" aria-label="Close">✕</button></div>
+  <button class="btn primary wide" data-act="edit-mode">✎ Edit words and pictures</button>
+  <fieldset><legend>Building a sentence</legend>
+    ${modes.map(([v, t, d]) => `<label class="opt"><input type="radio" name="mode" value="${v}" ${s.mode === v ? "checked" : ""}><span><b>${t}</b><small>${d}</small></span></label>`).join("")}
+  </fieldset>
+  <fieldset><legend>Speech</legend>
+    ${tog("speakWord", "Say each word when it's tapped")}
+    ${tog("speakSentence", "Say the whole sentence at the end")}
+    ${tog("grammar", "Fix grammar when speaking (“Mum wants”, not “Mum want”)")}
+    <label class="field">Voice<select id="voiceSel"></select></label>
+    <label class="field">Speed <small id="rateVal">${s.rate.toFixed(2)}×</small><input type="range" id="rate" min="0.5" max="1.4" step="0.05" value="${s.rate}"></label>
+    <label class="field">Pitch <small id="pitchVal">${s.pitch.toFixed(2)}</small><input type="range" id="pitch" min="0.6" max="1.6" step="0.05" value="${s.pitch}"></label>
+    <div class="btn-row"><button class="btn" data-act="test-voice">🔊 Test the voice</button></div>
+    <p class="note">On iPad, extra voices (including Australian ones) can be downloaded in Settings → Accessibility → Spoken Content → Voices. Reopen this page afterwards.</p>
+  </fieldset>
+  <fieldset><legend>Screen</legend>
+    <div class="field">Picture size<div class="seg">${[["s", "Small"], ["m", "Medium"], ["l", "Large"]].map(([v, t]) => `<label><input type="radio" name="size" value="${v}" ${s.size === v ? "checked" : ""}>${t}</label>`).join("")}</div></div>
+    ${tog("showQuick", "Show the quick words bar (yes, no, help…)")}
+  </fieldset>
+  <fieldset><legend>Backup</legend>
+    <p class="note">Words, pictures and settings are saved on this device only. Save a backup file before clearing browser data or moving to a new iPad.</p>
+    <div class="btn-row"><button class="btn" data-act="export">Save backup file</button><button class="btn" data-act="import">Load backup file</button></div>
+    <div class="btn-row">${confirmReset
+      ? `<span class="warn">Replace all words and photos with the starting board?</span><button class="btn danger" data-act="reset-yes">Yes, reset</button><button class="btn" data-act="reset-no">Keep my board</button>`
+      : `<button class="btn ghost-danger" data-act="reset">Reset to starting board</button>`}</div>
+  </fieldset>
+  <fieldset><legend>Tip</legend><p class="note">In Safari, tap Share → Add to Home Screen. The board then opens full screen like an app and keeps its pictures safely.</p></fieldset>`;
+}
+function fillVoices() {
+  const sel = $("#voiceSel"); if (!sel) return;
+  if (!synth) { sel.innerHTML = `<option>Speech isn't available in this browser</option>`; sel.disabled = true; return; }
+  const cur = pickVoice();
+  sel.innerHTML = voices.length
+    ? voices.map(v => `<option value="${esc(v.voiceURI)}" ${cur && v.voiceURI === cur.voiceURI ? "selected" : ""}>${esc(v.name)} (${esc(v.lang)})</option>`).join("")
+    : `<option value="">Device default voice</option>`;
+}
+function openSettings() { openSheet("settings", settingsHTML()); fillVoices(); }
+
+function srcKind(src) { return kindOf(src); }
+function tileSheetHTML() {
+  const d = draft, kind = srcKind(d.src);
+  const where = d.src === "who" ? "Who" : d.src === "doing" ? "Doing" : d.src === "quick" ? "Quick words" : d.src === "basics" ? "Answers" : ((groupById(d.src) || tabById(d.src) || {}).label || "");
+  const prev = d.photoData ? `<img src="${d.photoData}" alt="">` : `<span class="emo" id="pv-emo">${esc(d.emoji || "⭐")}</span>`;
+  return `<div class="sh-head"><h2>${d.id ? "Change" : "New"} picture · ${esc(where)}</h2><button class="x" data-act="close" aria-label="Close">✕</button></div>
+  <div class="ed">
+    <div class="ed-prev"><div class="tile k-${kind}"><span class="pic">${prev}</span><span class="word" id="pv-word">${esc(d.label || "word")}</span></div></div>
+    <div class="ed-fields">
+      <div class="btn-row"><button class="btn" data-act="photo">📷 Take or choose photo</button>${d.photoData ? `<button class="btn" data-act="nophoto">Use emoji instead</button>` : ""}</div>
+      ${d.photoData ? "" : `<label class="field">Emoji <small>Tap the emoji key on the keyboard</small><input type="text" id="f-emoji" value="${esc(d.emoji)}" maxlength="16" autocomplete="off"></label>`}
+      <label class="field">Word on the picture<input type="text" id="f-label" value="${esc(d.label)}" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <label class="field">Say it as <small>Optional. For example “the toilet” or “a hug”</small><div class="inline"><input type="text" id="f-say" value="${esc(d.say)}" autocomplete="off" autocapitalize="off"><button type="button" data-act="test-say" aria-label="Hear it">🔊</button></div></label>
+      ${d.src === "doing" ? `<label class="field">Then open this group<select id="f-go"><option value="">Stay on the last group</option>${board.groups.map(g => `<option value="${esc(g.id)}" ${d.go === g.id ? "selected" : ""}>${esc(g.emoji)} ${esc(g.label)}</option>`).join("")}</select></label>` : ""}
+    </div>
+  </div>
+  ${d.id ? `<div class="btn-row" style="margin-top:16px"><button class="btn" data-act="move-tile" data-dir="-1">◀ Move earlier</button><button class="btn" data-act="move-tile" data-dir="1">Move later ▶</button></div>` : ""}
+  <div class="sh-foot">
+    ${d.id ? (d.confirmDel
+      ? `<span class="warn">Delete “${esc(d.label)}”?</span><button class="btn danger" data-act="del-tile-yes">Yes, delete</button><button class="btn" data-act="del-tile-no">Keep</button>`
+      : `<button class="btn ghost-danger" data-act="del-tile">Delete</button>`) : ""}
+    <span class="sp"></span><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-tile">Save</button>
+  </div>`;
+}
+function openTile(src, id) {
+  const it = id ? getItem(src, id) : null;
+  draft = { src, id: it ? it.id : null, label: it ? it.label : "", say: it ? it.say || "" : "", emoji: it ? it.emoji || "⭐" : "⭐",
+    photo: it ? it.photo || null : null, photoData: it && it.photo ? board.photos[it.photo] || null : null, go: it ? it.go || "" : "", confirmDel: false };
+  openSheet("tile", tileSheetHTML());
+}
+function rerenderTileSheet() { const y = sheetBody.scrollTop; sheetBody.innerHTML = tileSheetHTML(); sheetBody.scrollTop = y; }
+function saveTile() {
+  const d = draft; const label = d.label.trim();
+  if (!label) { toast("Type the word that goes on the picture."); return; }
+  const list = listFor(d.src); if (!list) return closeSheet();
+  let pid = null;
+  if (d.photoData) {
+    if (d.photo && board.photos[d.photo] === d.photoData) pid = d.photo;
+    else { pid = uid(); board.photos[pid] = d.photoData; }
+  }
+  const fields = { label, say: d.say.trim(), emoji: d.emoji.trim() || "⭐", photo: pid };
+  if (d.src === "doing") fields.go = d.go;
+  if (d.id) Object.assign(list.find(i => i.id === d.id), fields);
+  else list.push(Object.assign({ id: uid() }, fields));
+  gcPhotos(); save(); closeSheet(); render();
+}
+function deleteTile() {
+  const d = draft, list = listFor(d.src); const i = list.findIndex(x => x.id === d.id);
+  if (i > -1) list.splice(i, 1);
+  st.slots = st.slots.map(s => (s && s.id === d.id ? null : s));
+  if (!st.slots.some(Boolean)) resetSentence();
+  gcPhotos(); save(); closeSheet(); render();
+}
+function moveTile(dir) {
+  const list = listFor(draft.src); const i = list.findIndex(x => x.id === draft.id); const j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  save(); render(); toast(dir < 0 ? "Moved earlier" : "Moved later");
+}
+
+function groupSheetHTML() {
+  const g = gdraft;
+  if (g.isTab) return tabSheetHTML();
+  const kinds = [["thing", "Things (orange)"], ["feel", "Feelings and describing (blue)"], ["who", "People (yellow)"], ["social", "Social words (pink)"]];
+  return `<div class="sh-head"><h2>${g.id ? "Edit group" : "New group"}</h2><button class="x" data-act="close" aria-label="Close">✕</button></div>
+  <div class="ed-fields">
+    <label class="field">Group name<input type="text" id="g-label" value="${esc(g.label)}" autocomplete="off"></label>
+    <label class="field">Emoji<input type="text" id="g-emoji" value="${esc(g.emoji)}" maxlength="16" autocomplete="off"></label>
+    <fieldset style="margin:0"><legend>Colour</legend>${kinds.map(([v, t]) => `<label class="opt k-${v}"><input type="radio" name="gkind" value="${v}" ${g.kind === v ? "checked" : ""}><span class="dot"></span><span><b>${t}</b></span></label>`).join("")}</fieldset>
+    ${g.mirror ? `<p class="note">This group always shows the people from the Who page.</p>` : ""}
+  </div>
+  ${g.id ? `<div class="btn-row" style="margin-top:16px"><button class="btn" data-act="move-group" data-dir="-1">◀ Move earlier</button><button class="btn" data-act="move-group" data-dir="1">Move later ▶</button></div>` : ""}
+  <div class="sh-foot">
+    ${g.id ? (g.confirmDel
+      ? `<span class="warn">Delete “${esc(g.label)}” and its pictures?</span><button class="btn danger" data-act="del-group-yes">Yes, delete</button><button class="btn" data-act="del-group-no">Keep</button>`
+      : `<button class="btn ghost-danger" data-act="del-group">Delete group</button>`) : ""}
+    <span class="sp"></span><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-group">Save</button>
+  </div>`;
+}
+function tabSheetHTML() {
+  const g = gdraft;
+  const kinds = [["feel", "Blue"], ["thing", "Orange"], ["who", "Yellow"], ["social", "Pink"], ["do", "Green"]];
+  return `<div class="sh-head"><h2>${g.id ? "Edit question" : "New question"}</h2><button class="x" data-act="close" aria-label="Close">✕</button></div>
+  <div class="ed-fields">
+    <label class="field">Question <small>Shown on the tab, e.g. “What did you eat?”</small><input type="text" id="g-label" value="${esc(g.label)}" autocomplete="off"></label>
+    <label class="field">Emoji<input type="text" id="g-emoji" value="${esc(g.emoji)}" maxlength="16" autocomplete="off"></label>
+    <label class="field">Start each answer with <small>Optional, e.g. “I feel” or “I ate”</small><input type="text" id="g-prefix" value="${esc(g.prefix)}" autocomplete="off" autocapitalize="off"></label>
+    <label class="field">Pictures<select id="g-from"><option value="">Its own pictures</option>${board.groups.map(x => `<option value="${esc(x.id)}" ${g.from === x.id ? "selected" : ""}>Same as ${esc(x.emoji)} ${esc(x.label)} on the Talk side</option>`).join("")}</select></label>
+    <div class="field">Colour<div class="seg">${kinds.map(([v, t]) => `<label class="k-${v}"><input type="radio" name="gkind" value="${v}" ${g.kind === v ? "checked" : ""}><span class="dot" style="display:inline-block;vertical-align:-3px;margin-right:6px"></span>${t}</label>`).join("")}</div></div>
+  </div>
+  ${g.id ? `<div class="btn-row" style="margin-top:16px"><button class="btn" data-act="move-group" data-dir="-1">◀ Move earlier</button><button class="btn" data-act="move-group" data-dir="1">Move later ▶</button></div>` : ""}
+  <div class="sh-foot">
+    ${g.id ? (g.confirmDel
+      ? `<span class="warn">Delete the “${esc(g.label)}” page?</span><button class="btn danger" data-act="del-group-yes">Yes, delete</button><button class="btn" data-act="del-group-no">Keep</button>`
+      : `<button class="btn ghost-danger" data-act="del-group">Delete question</button>`) : ""}
+    <span class="sp"></span><button class="btn" data-act="close">Cancel</button><button class="btn primary" data-act="save-group">Save</button>
+  </div>`;
+}
+function openTab(id) {
+  const t = id ? tabById(id) : null;
+  gdraft = { isTab: true, id: t ? t.id : null, label: t ? t.label : "", emoji: t ? t.emoji : "❓", kind: t ? t.kind : "feel", prefix: t ? t.prefix : "", from: t ? t.from : "", confirmDel: false };
+  openSheet("group", groupSheetHTML());
+}
+function openGroup(id) {
+  const g = id ? groupById(id) : null;
+  gdraft = { id: g ? g.id : null, label: g ? g.label : "", emoji: g ? g.emoji : "⭐", kind: g ? g.kind : "thing", mirror: !!(g && g.mirror), confirmDel: false };
+  openSheet("group", groupSheetHTML());
+}
+function saveGroup() {
+  const g = gdraft; const label = g.label.trim();
+  if (!label) { toast(g.isTab ? "Type the question." : "Give the group a name."); return; }
+  if (g.isTab) {
+    const f = { label, emoji: g.emoji.trim() || "❓", kind: g.kind, prefix: g.prefix.trim(), from: g.from };
+    if (g.id) Object.assign(tabById(g.id), f);
+    else { const id = "a-" + uid(); board.answers.tabs.push(Object.assign({ id, items: [] }, f)); st.atab = id; }
+    save(); closeSheet(); render(); return;
+  }
+  if (g.id) Object.assign(groupById(g.id), { label, emoji: g.emoji.trim() || "⭐", kind: g.kind });
+  else { const id = uid(); board.groups.push({ id, label, emoji: g.emoji.trim() || "⭐", kind: g.kind, items: [] }); st.group = id; }
+  save(); closeSheet(); render();
+}
+function deleteGroup() {
+  if (gdraft.isTab) {
+    const k = board.answers.tabs.findIndex(x => x.id === gdraft.id);
+    if (k > -1) board.answers.tabs.splice(k, 1);
+    gcPhotos(); save(); closeSheet(); render(); return;
+  }
+  board.answers.tabs.forEach(t => { if (t.from === gdraft.id) t.from = ""; });
+  const i = board.groups.findIndex(x => x.id === gdraft.id);
+  if (i > -1) board.groups.splice(i, 1);
+  board.doing.forEach(d => { if (d.go === gdraft.id) d.go = ""; });
+  st.slots = st.slots.map(s => (s && s.src === gdraft.id ? null : s));
+  gcPhotos(); save(); closeSheet(); render();
+}
+function moveGroup(dir) {
+  const l = gdraft.isTab ? board.answers.tabs : board.groups, i = l.findIndex(x => x.id === gdraft.id), j = i + dir;
+  if (i < 0 || j < 0 || j >= l.length) return;
+  [l[i], l[j]] = [l[j], l[i]]; save(); render(); toast(dir < 0 ? "Moved earlier" : "Moved later");
+}
+
+/* Sheet inputs */
+sheetBody.addEventListener("input", e => {
+  const t = e.target;
+  if (sheetKind === "tile" && draft) {
+    if (t.id === "f-label") { draft.label = t.value; const w = $("#pv-word"); if (w) w.textContent = t.value || "word"; }
+    if (t.id === "f-say") draft.say = t.value;
+    if (t.id === "f-emoji") { draft.emoji = t.value; const em = $("#pv-emo"); if (em) em.textContent = t.value || "⭐"; }
+  } else if (sheetKind === "group" && gdraft) {
+    if (t.id === "g-label") gdraft.label = t.value;
+    if (t.id === "g-emoji") gdraft.emoji = t.value;
+    if (t.id === "g-prefix") gdraft.prefix = t.value;
+  } else if (sheetKind === "settings") {
+    if (t.id === "rate") { S().rate = parseFloat(t.value); $("#rateVal").textContent = S().rate.toFixed(2) + "×"; save(); }
+    if (t.id === "pitch") { S().pitch = parseFloat(t.value); $("#pitchVal").textContent = S().pitch.toFixed(2); save(); }
+  }
+});
+sheetBody.addEventListener("change", e => {
+  const t = e.target;
+  if (sheetKind === "tile" && t.id === "f-go") draft.go = t.value;
+  if (sheetKind === "group" && t.name === "gkind") gdraft.kind = t.value;
+  if (sheetKind === "group" && t.id === "g-from") gdraft.from = t.value;
+  if (sheetKind !== "settings") return;
+  const s = S();
+  if (t.name === "mode") { s.mode = t.value; resetSentence(); }
+  else if (t.name === "size") s.size = t.value;
+  else if (t.id === "voiceSel") { s.voice = t.value; say("Hello"); }
+  else if (t.type === "checkbox" && t.dataset.key) s[t.dataset.key] = t.checked;
+  save(); render();
+});
+
+$("#photoInput").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f || !draft) return;
+  try { draft.photoData = await fileToPhoto(f); rerenderTileSheet(); }
+  catch (err) { toast("That picture couldn't be opened. Try a different photo."); }
+});
+$("#importInput").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  try {
+    const b = JSON.parse(await f.text());
+    if (!valid(b)) throw new Error("not a board");
+    clearPhotoCache(); board = migrate(b); resetSentence(); save(); closeSheet(); render(); toast("Backup loaded.");
+  } catch (err) { toast("That file isn't a Wordsprout backup."); }
+});
+function exportBoard() {
+  if (window.self !== window.top) { toast("Backups can be saved when the board is opened from its own web address, like your GitHub Pages link."); return; }
+  try {
+    const blob = new Blob([JSON.stringify(board)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `wordsprout-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    toast("Backup file downloaded.");
+  } catch (err) { toast("Saving a file isn't allowed in this browser."); }
+}
+
+/* ---------- Taps ---------- */
+const acts = {
+  pick(b) {
+    if (st.edit) { const src = b.dataset.src; const g = groupById(src); openTile(g && g.mirror ? "who" : src, b.dataset.id); return; }
+    pick(+b.dataset.step, b.dataset.src, b.dataset.id);
+  },
+  add(b) { openTile(b.dataset.src, null); },
+  quick(b) {
+    if (st.edit) { openTile("quick", b.dataset.id); return; }
+    const it = getItem("quick", b.dataset.id); if (it) say(sayOf(it));
+  },
+  slot(b) {
+    if (!guided()) return;
+    const i = +b.dataset.i, open = firstOpen();
+    if (st.edit || st.slots[i] || st.skip[i] || open === -1 || i <= open) { st.step = i; st.done = false; render(); }
+  },
+  tab(b) { st.group = b.dataset.id; render(); },
+  atab(b) { st.atab = b.dataset.id; st.last = null; render(); },
+  mode(b) { st.mode = b.dataset.m; st.last = null; render(); },
+  answer(b) {
+    if (st.edit) { const src = b.dataset.src; const g = groupById(src); openTile(g && g.mirror ? "who" : src, b.dataset.id); return; }
+    answer(b.dataset.src, b.dataset.id);
+  },
+  skip() { skipStep(); },
+  speak() {
+    if (st.mode === "answer") { if (st.last) say(st.last.text); else toast("Tap an answer first."); return; }
+    const s = sentence(); if (s) say(s); else toast("Tap the pictures to make a sentence."); },
+  again() { say(sentence()); },
+  back() { back(); },
+  clear() { resetSentence(); render(); },
+  "done-edit"() { st.edit = false; render(); },
+  "edit-group"() { if (st.mode === "answer") { if (curTab()) openTab(curTab().id); } else if (curGroup()) openGroup(curGroup().id); },
+  "add-group"() { if (st.mode === "answer") openTab(null); else openGroup(null); },
+  close() { closeSheet(); },
+  "edit-mode"() { st.edit = true; st.done = false; if (firstOpen() === -1) st.step = 0; closeSheet(); render(); },
+  "test-voice"() { say("I want juice"); },
+  export() { exportBoard(); },
+  import() { $("#importInput").click(); },
+  reset() { confirmReset = true; sheetBody.innerHTML = settingsHTML(); fillVoices(); },
+  "reset-no"() { confirmReset = false; sheetBody.innerHTML = settingsHTML(); fillVoices(); },
+  "reset-yes"() { const s = S(); clearPhotoCache(); board = defaults(); board.settings = s; resetSentence(); save(); closeSheet(); render(); toast("Starting board restored."); },
+  photo() { $("#photoInput").click(); },
+  nophoto() { draft.photoData = null; rerenderTileSheet(); },
+  "test-say"() { if (draft) say(draft.say.trim() || draft.label.trim()); },
+  "save-tile"() { saveTile(); },
+  "del-tile"() { draft.confirmDel = true; rerenderTileSheet(); },
+  "del-tile-no"() { draft.confirmDel = false; rerenderTileSheet(); },
+  "del-tile-yes"() { deleteTile(); },
+  "move-tile"(b) { moveTile(+b.dataset.dir); },
+  "save-group"() { saveGroup(); },
+  "del-group"() { gdraft.confirmDel = true; sheetBody.innerHTML = groupSheetHTML(); },
+  "del-group-no"() { gdraft.confirmDel = false; sheetBody.innerHTML = groupSheetHTML(); },
+  "del-group-yes"() { deleteGroup(); },
+  "move-group"(b) { moveGroup(+b.dataset.dir); }
+};
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const f = acts[b.dataset.act]; if (f) f(b, e);
+});
+
+/* Grown-up lock: press and hold the cog */
+const gear = $("#gear"); let holdT = null, held = false;
+const HOLD_MS = 1400;
+function holdStart(e) {
+  e.preventDefault(); held = false; gear.classList.add("holding");
+  holdT = setTimeout(() => { held = true; gear.classList.remove("holding"); openSettings(); }, HOLD_MS);
+}
+function holdEnd() {
+  if (holdT) { clearTimeout(holdT); holdT = null; }
+  if (gear.classList.contains("holding") && !held) toast("Grown-ups: press and hold ⚙︎ to open settings.");
+  gear.classList.remove("holding");
+}
+gear.addEventListener("pointerdown", holdStart);
+gear.addEventListener("pointerup", holdEnd);
+gear.addEventListener("pointercancel", () => { clearTimeout(holdT); gear.classList.remove("holding"); });
+gear.addEventListener("pointerleave", () => { clearTimeout(holdT); gear.classList.remove("holding"); });
+gear.addEventListener("contextmenu", e => e.preventDefault());
+gear.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSettings(); } });
+
+/* ---------- Start ---------- */
+render();
+if (synth) { loadVoices(); try { synth.addEventListener("voiceschanged", loadVoices); } catch (e) { synth.onvoiceschanged = loadVoices; } }
+store.get("board").then(saved => {
+  if (valid(saved)) { board = migrate(saved); render(); }
+}).catch(() => {});
+try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch (e) {}
+if ("serviceWorker" in navigator && window.self === window.top && location.protocol === "https:" && document.documentElement.dataset.app === "standalone") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+})();
+</script>
+
+</body>
+</html>
